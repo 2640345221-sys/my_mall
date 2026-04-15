@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my_mall.mapper.UserMapper">
+
+
+    <insert id="insert">
+        insert into my_mall.user(nick_name, login_name, password, introduce_sign, locked, create_time)
+        values (#{nickName},#{loginName},#{password},#{introduceSign},#{locked},#{createTime})
+    </insert>
+    <update id="update">
+        update my_mall.user
+        <set>
+            <if test="nickName!=null">nick_name=#{nickName},</if>
+            <if test="loginName!=null">login_name=#{loginName},</if>
+            <if test="password!=null">password=#{password},</if>
+            <if test="introduceSign!=null">introduce_sign=#{introduceSign},</if>
+            <if test="locked!=null">locked=#{locked}</if>
+        </set>
+        where id=#{id}
+    </update>
+</mapper>

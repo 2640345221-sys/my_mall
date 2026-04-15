@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my_mall.mapper.AddressMapper">
+
+    <insert id="insert">
+        insert into my_mall.user_address(user_id, user_name, user_phone, is_default, province, city, region, detail_address, create_time, update_time)
+        value(#{userId},#{userName},#{userPhone},#{isDefault},#{province},#{city},#{region},#{detailAddress},#{createTime},#{updateTime})
+    </insert>
+    <update id="update">
+        update my_mall.user_address
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="userPhone != null and userPhone != ''">user_phone = #{userPhone},</if>
+            <if test="isDefault != null">is_default = #{isDefault},</if>
+            <if test="province != null and province != ''">province = #{province},</if>
+            <if test="city != null and city != ''">city = #{city},</if>
+            <if test="region != null and region != ''">region = #{region},</if>
+            <if test="detailAddress != null and detailAddress != ''">detail_address = #{detailAddress},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where id=#{id}
+    </update>
+    <select id="getAddressById" resultType="my_mall.entity.po.UserAddress">
+        select * from my_mall.user_address
+        where id=#{addressId}
+    </select>
+
+</mapper>

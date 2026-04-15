@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: ${kkek.datasource.driver-class-name}
+    url: jdbc:mysql://${kkek.datasource.host}:${kkek.datasource.port}/${kkek.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&allowMultiQueries=true
+    username: ${kkek.datasource.username}
+    password: ${kkek.datasource.password}
+  servlet:
+    multipart:
+      max-file-size: 3MB
+      max-request-size: 10MB
+  redis:
+    host: ${kkek.redis.host}
+    port: ${kkek.redis.port}
+    database:  ${kkek.redis.database}
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: my_mall.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+kkek:
+  jwt:
+    admin-secret-key: mySecretKeymySecretKeymySecretKeymySecretKey
+    admin-ttl: 7200000
+    admin-token-name: token
+    user-secret-key: mySecretKeymySecretKeymySecretKeymySecretKey
+    user-ttl: 7200000
+    user-token-name: authentication
+
+aliyun:
+  oss:
+    access-key-id: ${aliyun.oss.access-key-id}
+    access-key-secret: ${aliyun.oss.access-key-secret}
+    bucket-name: ${aliyun.oss.bucket-name}
+    endpoint: ${aliyun.oss.endpoint}
+
