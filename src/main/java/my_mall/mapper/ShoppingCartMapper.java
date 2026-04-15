@@ -1,10 +1,13 @@
 package my_mall.mapper;
 
 import com.github.pagehelper.Page;
+import my_mall.entity.dto.OrderCartDTO;
 import my_mall.entity.dto.ShoppingCartPageDTO;
 import my_mall.entity.po.ShoppingCart;
 import my_mall.entity.vo.ShoppingCartItemVO;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface ShoppingCartMapper {
@@ -17,4 +20,8 @@ public interface ShoppingCartMapper {
     void deleteById(Long cartItemId);
 
     ShoppingCartItemVO getCartItem(Long cartItemId);
+
+    List<OrderCartDTO> getWithGoods(List<Long> cartItemIds);
+
+    void deleteBatch(List<Long> cartItemIds);
 }

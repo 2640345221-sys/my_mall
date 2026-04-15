@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my_mall.mapper.OrderMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO my_mall.order (
+            order_no, user_id, total_price, pay_status, pay_type, pay_time,
+            order_status, extra_info, create_time, update_time
+        ) VALUES (
+                     #{orderNo}, #{userId}, #{totalPrice}, #{payStatus}, #{payType}, #{payTime},
+                     #{orderStatus}, #{extraInfo}, #{createTime}, #{updateTime}
+                 )
+    </insert>
+    <update id="update">
+        UPDATE my_mall.order
+        <set>
+            <if test="totalPrice != null">total_price = #{totalPrice},</if>
+            <if test="payStatus != null">pay_status = #{payStatus},</if>
+            <if test="payType != null">pay_type = #{payType},</if>
+            <if test="payTime != null">pay_time = #{payTime},</if>
+            <if test="orderStatus != null">order_status = #{orderStatus},</if>
+            <if test="extraInfo != null">extra_info = #{extraInfo},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE order_no = #{orderNo}
+    </update>
+</mapper>

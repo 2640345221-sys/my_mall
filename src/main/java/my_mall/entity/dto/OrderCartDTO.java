@@ -12,5 +12,5 @@ public class OrderCartDTO {
     private Long goodsName;
     private String coverImg;
     private Integer price;
-    private Long count;
+    private Integer count;
 }

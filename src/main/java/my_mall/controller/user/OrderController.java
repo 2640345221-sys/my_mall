@@ -6,10 +6,7 @@ import my_mall.entity.dto.OrderDTO;
 import my_mall.entity.dto.UserAddressDTO;
 import my_mall.result.Result;
 import my_mall.service.OrderService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/order")
@@ -21,6 +18,18 @@ public class OrderController {
     @PostMapping("/saveOrder")
     public Result saveOrder(@RequestBody OrderDTO orderDTO) {
         orderService.save(orderDTO);
+        return Result.success();
+    }
+
+    @PutMapping("/{orderNo}/cancel")
+    public Result cancelOrder(@PathVariable("orderNo") String orderNo) {
+        orderService.cancel(orderNo);
+        return Result.success();
+    }
+
+    @PutMapping("/{orderNo}/confirm")
+    public Result confirmOrder(@PathVariable("orderNo") String orderNo) {
+        orderService.confirm(orderNo);
         return Result.success();
     }
 }

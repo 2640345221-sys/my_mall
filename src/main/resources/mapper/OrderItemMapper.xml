@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my_mall.mapper.OrderItemMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO my_mall.order_item (
+            order_id, goods_id, goods_name, cover_img, price, count, create_time
+        ) VALUES (
+                     #{orderId}, #{goodsId}, #{goodsName}, #{coverImg}, #{price}, #{count}, #{createTime}
+                 )
+    </insert>
+
+    <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO my_mall.order_item (
+        order_id, goods_id, goods_name, cover_img, price, count, create_time
+        ) VALUES
+        <foreach collection="orderItemList" item="item" separator=",">
+            (
+            #{item.orderId}, #{item.goodsId}, #{item.goodsName}, #{item.coverImg},
+            #{item.price}, #{item.count}, #{item.createTime}
+            )
+        </foreach>
+    </insert>
+</mapper>

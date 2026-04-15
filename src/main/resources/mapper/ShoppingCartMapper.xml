@@ -23,6 +23,13 @@
         delete from my_mall.shopping_cart
         where id=#{cartItemId}
     </delete>
+    <delete id="deleteBatch">
+        DELETE FROM my_mall.shopping_cart
+        WHERE id IN
+        <foreach collection="cartItemIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
     <select id="page" resultType="my_mall.entity.po.ShoppingCart">
         select * from my_mall.shopping_cart
         where user_id=#{userId}
@@ -33,5 +40,18 @@
         where sc.id=#{cartItemId}
 
 
+    </select>
+    <select id="getWithGoods" resultType="my_mall.entity.dto.OrderCartDTO">
+        select
+            sc.goods_id as goodsId,
+            g.name as goodsName,
+            g.cover_img as coverImg,
+            g.selling_price as price,
+            sc.goods_count as count
+        from my_mall.shopping_cart as sc left join my_mall.goods as g on sc.goods_id=g.id
+        where sc.id in
+        <foreach collection="cartItemIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </select>
 </mapper>

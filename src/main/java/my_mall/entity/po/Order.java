@@ -14,11 +14,11 @@ public class Order {
     private  String orderNo;
     private  Long userId;
     private  Integer totalPrice;
-    private   Byte payStatus;
-    private   Byte payType;
-    private    LocalDateTime payTime;
-    private   LocalDateTime createTime;
-    private   LocalDateTime updateTime;
-    private   String extraInfo;
-    private    Boolean isDeleted;
+    private  Byte payStatus;
+    private  Byte payType;
+    private  Byte orderStatus;
+    private  LocalDateTime payTime;
+    private  LocalDateTime createTime;
+    private  LocalDateTime updateTime;
+    private  String extraInfo;
 }
