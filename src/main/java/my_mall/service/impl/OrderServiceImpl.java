@@ -1,10 +1,16 @@
 package my_mall.service.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
 import my_mall.entity.dto.OrderCartDTO;
 import my_mall.entity.dto.OrderDTO;
+import my_mall.entity.dto.OrderPageDTO;
+import my_mall.entity.dto.OrderPayDTO;
 import my_mall.entity.po.*;
+import my_mall.entity.vo.OrderDetailVO;
 import my_mall.mapper.*;
+import my_mall.result.PageResult;
 import my_mall.service.OrderService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
@@ -13,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -93,6 +99,63 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus((byte)4);
         order.setOrderNo(orderNo);
         order.setUpdateTime(LocalDateTime.now());
+        orderMapper.update(order);
+    }
+
+    @Override
+    public OrderDetailVO getOrderDetail(String orderNo) {
+        Order order=orderMapper.getByOrderNo(orderNo);
+        List<OrderItem> itemList=orderItemMapper.getByOrderId(order.getId());
+        List<OrderCartDTO> list=itemList.stream().map(x->{
+            OrderCartDTO cartItemDTO=new OrderCartDTO();
+            BeanUtils.copyProperties(x,cartItemDTO);
+            return cartItemDTO;
+        }).collect(Collectors.toList());
+        OrderDetailVO orderDetailVO=new OrderDetailVO();
+        BeanUtils.copyProperties(order,orderDetailVO);
+        orderDetailVO.setOrderCartDTO(list);
+        return  orderDetailVO;
+    }
+
+    @Override
+    public PageResult getPage(OrderPageDTO orderPageDTO) {
+        Long userId = TLUtils.getUserId();
+        PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
+        Page<Order> page=orderMapper.getByUserId(orderPageDTO,userId);
+        List<Long> ids=page.getResult().stream().map(x->x.getId()).collect(Collectors.toList());
+        List<OrderItem> list=orderItemMapper.getBatchByOrderId(ids);
+        Map<Long, List<OrderItem>> itemMap = list.stream()
+                .collect(Collectors.groupingBy(OrderItem::getOrderId));
+        List<Order>orders=page.getResult();
+
+        List<OrderDetailVO> detailVOList = orders.stream().map(order -> {
+            OrderDetailVO vo = new OrderDetailVO();
+            BeanUtils.copyProperties(order, vo);
+            List<OrderItem> items = itemMap.getOrDefault(order.getId(), Collections.emptyList());
+            List<OrderCartDTO> cartDTOs = items.stream().map(item -> {
+                OrderCartDTO dto = new OrderCartDTO();
+                BeanUtils.copyProperties(item, dto);
+                return dto;
+            }).collect(Collectors.toList());
+            vo.setOrderCartDTO(cartDTOs);
+            return vo;
+        }).collect(Collectors.toList());
+
+        PageResult pageResult = new PageResult();
+        pageResult.setTotal(page.getTotal());
+        pageResult.setTotalPage(page.getPages());
+        pageResult.setRecords(detailVOList);
+        return pageResult;
+    }
+
+    @Override
+    public void paySuccess(OrderPayDTO orderPayDTO) {
+        Order order=new Order();
+        order.setPayType(orderPayDTO.getPayType());
+        order.setPayTime(LocalDateTime.now());
+        order.setUpdateTime(LocalDateTime.now());
+        order.setPayStatus((byte) 1);
+        order.setOrderStatus((byte) 1);
         orderMapper.update(order);
     }
 

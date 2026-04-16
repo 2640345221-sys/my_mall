@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my_mall.mapper.AdminMapper">
+
+    <update id="update">
+        UPDATE my_mall.admin
+        <set>
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="nickName != null and nickName != ''">nick_name = #{nickName},</if>
+            <if test="locked != null">locked = #{locked},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <select id="getById" resultType="my_mall.entity.po.Admin">
+        select * from my_mall.admin where id=#{id}
+    </select>
+</mapper>

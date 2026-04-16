@@ -10,4 +10,8 @@ public interface OrderItemMapper {
     void insert(OrderItem orderItem);
 
     void insertBatch(List<OrderItem> orderItemList);
+
+    List<OrderItem> getByOrderId(Long id);
+
+    List<OrderItem> getBatchByOrderId(List<Long> ids);
 }

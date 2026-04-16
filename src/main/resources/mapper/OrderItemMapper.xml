@@ -21,4 +21,15 @@
             )
         </foreach>
     </insert>
+    <select id="getByOrderId" resultType="my_mall.entity.po.OrderItem">
+        select * from my_mall.order_item
+        where order_id =#{id}
+    </select>
+    <select id="getBatchByOrderId" resultType="my_mall.entity.po.OrderItem">
+        SELECT * FROM my_mall.order_item
+        WHERE order_id IN
+        <foreach collection="ids" item="orderId" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+    </select>
 </mapper>
