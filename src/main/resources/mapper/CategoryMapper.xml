@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my_mall.mapper.CategoryMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO my_mall.goods_category (level, parent_id, name, `rank`, create_time, create_user, update_time, update_user)
+        VALUES (#{level}, #{parentId}, #{name}, #{rank}, #{createTime}, #{createUser}, #{updateTime}, #{updateUser})
+    </insert>
+    <update id="update">
+        UPDATE my_mall.goods_category
+        <set>
+            <if test="level != null">level = #{level},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="rank != null">`rank` = #{rank},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteBatch">
+        DELETE FROM my_mall.goods_category
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

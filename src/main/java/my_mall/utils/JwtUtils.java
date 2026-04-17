@@ -4,11 +4,7 @@ package my_mall.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.Resource;
-import my_mall.entity.properties.JwtProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -37,7 +33,7 @@ public class JwtUtils {
         SecretKey secret = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
         return Jwts.parser()
-                .setSigningKey(secret)
+                .verifyWith(secret)
                 .build()
                 .parseClaimsJws(token).getBody();
 

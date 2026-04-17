@@ -10,7 +10,6 @@
     <update id="update">
         update my_mall.user_address
         <set>
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="userName != null and userName != ''">user_name = #{userName},</if>
             <if test="userPhone != null and userPhone != ''">user_phone = #{userPhone},</if>
             <if test="isDefault != null">is_default = #{isDefault},</if>

@@ -6,6 +6,8 @@ import my_mall.entity.dto.OrderPayDTO;
 import my_mall.entity.vo.OrderDetailVO;
 import my_mall.result.PageResult;
 
+import java.util.List;
+
 public interface OrderService {
     void save(OrderDTO orderDTO);
 
@@ -18,4 +20,8 @@ public interface OrderService {
     PageResult getPage(OrderPageDTO orderPageDTO);
 
     void paySuccess(OrderPayDTO orderPayDTO);
+
+    void setStatus(List<Long> ids, byte b);
+
+    PageResult aGetPage(OrderPageDTO orderPageDTO);
 }

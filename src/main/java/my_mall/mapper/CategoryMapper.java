@@ -10,4 +10,12 @@ import java.util.List;
 public interface CategoryMapper {
     @Select("select * from my_mall.goods_category order by parent_id asc,id asc")
     List<GoodsCategory> getAll();
+
+    void insert(GoodsCategory category);
+
+    void deleteBatch(List<Long> ids);
+
+    void update(GoodsCategory category);
+    @Select("select * from my_mall.goods_category where id=#{id}")
+    GoodsCategory getById(Long id);
 }

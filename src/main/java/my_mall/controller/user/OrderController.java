@@ -12,7 +12,7 @@ import my_mall.result.Result;
 import my_mall.service.OrderService;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+@RestController("userOrderController")
 @RequestMapping("/api/user/order")
 @Slf4j
 public class OrderController {

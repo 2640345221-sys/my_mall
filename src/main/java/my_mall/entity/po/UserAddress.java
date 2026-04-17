@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class UserAddress {
     private Long id;
     private Long userId;
-    private  String userName;
+    private  String username;
     private  String userPhone;
     private    Boolean isDefault;
     private   String province;

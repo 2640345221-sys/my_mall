@@ -3,11 +3,9 @@ package my_mall.controller.user;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.entity.dto.UserAddressDTO;
-import my_mall.entity.dto.UserAddressUDTO;
 import my_mall.entity.po.UserAddress;
 import my_mall.result.Result;
 import my_mall.service.AddressService;
-import my_mall.utils.TLUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,8 +42,8 @@ public class AddressController {
     }
 
     @PutMapping
-    public Result updateAddress(@RequestBody UserAddressUDTO userAddressUDTO){
-        addressService.update(userAddressUDTO);
+    public Result updateAddress(@RequestBody UserAddressDTO userAddressDTO){
+        addressService.update(userAddressDTO);
         return Result.success();
     }
 

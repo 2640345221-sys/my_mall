@@ -7,9 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
-public class OrderPageDTO {
+public class CarouselPageDTO {
     private Integer pageNumber;
     private Integer pageSize;
-    private Integer orderStatus;
-    private String orderNo;
 }

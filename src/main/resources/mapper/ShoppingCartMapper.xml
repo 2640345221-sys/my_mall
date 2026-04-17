@@ -29,6 +29,7 @@
         <foreach collection="cartItemIds" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
+        AND user_id = #{userId}
     </delete>
     <select id="page" resultType="my_mall.entity.po.ShoppingCart">
         select * from my_mall.shopping_cart
@@ -53,5 +54,6 @@
         <foreach collection="cartItemIds" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
+        and sc.user_id = #{userId}
     </select>
 </mapper>

@@ -7,9 +7,9 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
-public class OrderPageDTO {
+public class GoodsPageDTO {
     private Integer pageNumber;
     private Integer pageSize;
-    private Integer orderStatus;
-    private String orderNo;
+    private Byte sellStatus;
+    private String goodsName;
 }

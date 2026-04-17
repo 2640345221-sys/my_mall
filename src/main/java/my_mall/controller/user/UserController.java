@@ -11,6 +11,7 @@ import my_mall.entity.vo.UserVO;
 import my_mall.result.Result;
 import my_mall.service.UserService;
 import my_mall.utils.JwtUtils;
+import my_mall.utils.TLUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -46,8 +47,7 @@ public class UserController {
 
     @PostMapping("/logout")
     public Result logout(){
-        ThreadLocal threadLocal = new ThreadLocal();
-        threadLocal.remove();
+        TLUtils.remove();
         return Result.success();
     }
 

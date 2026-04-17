@@ -1,13 +1,16 @@
 package my_mall.mapper;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import com.github.pagehelper.Page;
+
 import my_mall.entity.dto.OrderCartDTO;
 import my_mall.entity.dto.ShoppingCartPageDTO;
 import my_mall.entity.po.ShoppingCart;
 import my_mall.entity.vo.ShoppingCartItemVO;
-import org.apache.ibatis.annotations.Mapper;
-
-import java.util.List;
 
 @Mapper
 public interface ShoppingCartMapper {
@@ -21,7 +24,7 @@ public interface ShoppingCartMapper {
 
     ShoppingCartItemVO getCartItem(Long cartItemId);
 
-    List<OrderCartDTO> getWithGoods(List<Long> cartItemIds);
+    List<OrderCartDTO> getWithGoods(List<Long> cartItemIds, Long userId);
 
-    void deleteBatch(List<Long> cartItemIds);
+    void deleteBatch(List<Long> cartItemIds,  Long userId);
 }

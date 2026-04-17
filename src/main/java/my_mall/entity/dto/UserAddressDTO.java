@@ -8,6 +8,7 @@ import lombok.*;
 @ToString
 @Builder
 public class UserAddressDTO {
+    private Long id;
     private String city;
     private String detailAddress;
     private Boolean isDefault;

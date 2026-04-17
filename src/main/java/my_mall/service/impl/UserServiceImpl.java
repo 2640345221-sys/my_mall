@@ -41,7 +41,6 @@ public class UserServiceImpl  implements UserService {
         User user=User.builder()
                 .loginName(loginDTO.getUsername())
                 .nickName(nickName)
-                .loginName(loginDTO.getUsername())
                 .password(DigestUtils.md5DigestAsHex(loginDTO.getPassword().getBytes()))
                 .locked(false)
                 .introduceSign("")

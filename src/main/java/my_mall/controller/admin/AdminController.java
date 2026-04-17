@@ -27,8 +27,6 @@ public class AdminController {
     private AdminService adminService;
     @Resource
     private JwtProperties jwtProperties;
-    @Autowired
-    private AdminMapper adminMapper;
 
     @GetMapping("/login")
     public Result login(LoginDTO loginDTO){

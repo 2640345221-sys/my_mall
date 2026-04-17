@@ -25,12 +25,40 @@
         </set>
         WHERE order_no = #{orderNo}
     </update>
+    <update id="setStatus">
+        update my_mall.`order`
+        set order_status = #{status},
+        update_time = #{updateTime}
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
     <select id="getByOrderNo" resultType="my_mall.entity.po.Order">
         select * from my_mall.`order`
         where order_no=#{orderNo}
     </select>
     <select id="getByUserId" resultType="my_mall.entity.po.Order">
         select * from my_mall.`order`
-        where user_id=#{userId}
+        <where>
+            user_id=#{userId}
+            <if test="orderPageDTO.orderStatus!=null">
+               and order_status=#{orderPageDTO.orderStatus}
+            </if>
+            <if test="orderPageDTO.orderNo!=null">
+                and order_no=#{orderPageDTO.orderNo}
+            </if>
+        </where>
+    </select>
+    <select id="aGetByUserId" resultType="my_mall.entity.po.Order">
+        select * from my_mall.`order`
+        <where>
+            <if test="orderPageDTO.orderStatus!=null">
+                and order_status=#{orderPageDTO.orderStatus}
+            </if>
+            <if test="orderPageDTO.orderNo!=null">
+                and order_no=#{orderPageDTO.orderNo}
+            </if>
+        </where>
     </select>
 </mapper>

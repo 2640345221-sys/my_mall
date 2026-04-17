@@ -4,13 +4,13 @@ import jakarta.annotation.Resource;
 import my_mall.entity.dto.AdminUpdateDTO;
 import my_mall.entity.dto.LoginDTO;
 import my_mall.entity.po.Admin;
-import my_mall.entity.po.User;
 import my_mall.mapper.AdminMapper;
 import my_mall.service.AdminService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
-
+@Service
 public class AdminServiceImpl implements AdminService {
     @Resource
     private AdminMapper adminMapper;
