@@ -12,7 +12,6 @@ import my_mall.result.PageResult;
 import my_mall.service.CarouselService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

@@ -61,4 +61,11 @@
             </if>
         </where>
     </select>
+    <select id="getByIds" resultType="my_mall.entity.po.Order">
+        select * from my_mall.`order`
+        where id in
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

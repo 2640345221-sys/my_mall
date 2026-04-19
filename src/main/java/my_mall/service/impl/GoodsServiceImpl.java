@@ -6,7 +6,9 @@ import jakarta.annotation.Resource;
 import my_mall.entity.dto.GoodsPageDTO;
 import my_mall.entity.dto.GoodsPageSearchDTO;
 import my_mall.entity.po.Goods;
+import my_mall.entity.po.GoodsCategory;
 import my_mall.entity.vo.GoodsDetailVO;
+import my_mall.mapper.CategoryMapper;
 import my_mall.mapper.GoodsMapper;
 import my_mall.result.PageResult;
 import my_mall.service.GoodsService;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 public class GoodsServiceImpl implements GoodsService {
     @Resource
     private GoodsMapper goodsMapper;
+    @Resource
+    private CategoryMapper categoryMapper;
     @Override
     public GoodsDetailVO getGoodsDetail(Long goodsId) {
         Goods goods=goodsMapper.getById(goodsId);
@@ -52,6 +56,16 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public void insert(Goods goods) {
+        Long userId = TLUtils.getUserId();
+        GoodsCategory category = categoryMapper.getById(goods.getCategoryId());
+        if (category == null || category.getLevel() != 3) {
+            throw new RuntimeException("必须选择三级分类");
+        }
+
+        Goods exist = goodsMapper.getByCategoryAndName(goods.getCategoryId(), goods.getName());
+        if (exist != null) {
+            throw new RuntimeException("该分类下已存在同名商品");
+        }
         goods.setCreateTime(LocalDateTime.now());
         goods.setUpdateTime(LocalDateTime.now());
         goods.setCreateUser(Math.toIntExact(TLUtils.getUserId()));

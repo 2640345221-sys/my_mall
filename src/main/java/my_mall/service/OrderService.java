@@ -1,12 +1,12 @@
 package my_mall.service;
 
+import java.util.List;
+
 import my_mall.entity.dto.OrderDTO;
 import my_mall.entity.dto.OrderPageDTO;
 import my_mall.entity.dto.OrderPayDTO;
 import my_mall.entity.vo.OrderDetailVO;
 import my_mall.result.PageResult;
-
-import java.util.List;
 
 public interface OrderService {
     void save(OrderDTO orderDTO);
@@ -21,7 +21,11 @@ public interface OrderService {
 
     void paySuccess(OrderPayDTO orderPayDTO);
 
-    void setStatus(List<Long> ids, byte b);
-
     PageResult aGetPage(OrderPageDTO orderPageDTO);
+
+    void checkDone(List<Long> orderIds);
+
+    void checkOut(List<Long> orderIds);
+
+    void closeOrder(List<Long> orderIds);
 }

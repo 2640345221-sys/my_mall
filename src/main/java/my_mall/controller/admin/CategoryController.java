@@ -1,5 +1,7 @@
 package my_mall.controller.admin;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.entity.dto.CategoryDTO;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "分类管理模块")
 @RestController("adminCategoryController")
 @RequestMapping("/api/admin/category")
 @Slf4j
@@ -21,30 +24,35 @@ public class CategoryController {
     @Autowired
     private CategoryMapper categoryMapper;
 
+    @Operation(summary = "新增分类")
     @PostMapping
     public Result insert(@RequestBody CategoryDTO categoryInsertDTO) {
         categoryService.insert(categoryInsertDTO);
         return Result.success();
     }
 
+    @Operation(summary = "批量删除分类")
     @DeleteMapping
     public Result delete(@RequestParam List<Long> ids ) {
         categoryService.deleteBatch(ids);
         return Result.success();
     }
 
+    @Operation(summary = "更新分类")
     @PutMapping
     public Result update(@RequestBody CategoryDTO categoryDTO) {
         categoryService.update(categoryDTO);
         return Result.success();
     }
 
+    @Operation(summary = "根据ID查询分类")
     @GetMapping("/{id}")
     public Result<GoodsCategory> getById(@PathVariable Long id) {
         GoodsCategory category=categoryService.getById(id);
         return Result.success(category);
     }
 
+    @Operation(summary = "获取所有分类")
     @GetMapping
     public Result<List<GoodsCategory>> getAll() {
         return Result.success(categoryService.getAll());

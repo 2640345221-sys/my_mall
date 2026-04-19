@@ -1,6 +1,7 @@
 package my_mall.service.impl;
 
 import jakarta.annotation.Resource;
+import lombok.SneakyThrows;
 import my_mall.entity.dto.UserAddressDTO;
 import my_mall.entity.po.UserAddress;
 import my_mall.mapper.AddressMapper;
@@ -30,32 +31,56 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public UserAddress getDefaultAddress() {
         Long userId = TLUtils.getUserId();
-        UserAddress userAddress = addressMapper.getDefault(userId);
-        return userAddress;
+        return addressMapper.getDefault(userId);
     }
 
+    @SneakyThrows
     @Override
     public UserAddress getAddress(Long addressId) {
-        UserAddress userAddress = addressMapper.getAddressById(addressId);
-        return userAddress;
+        Long userId = TLUtils.getUserId();
+
+        UserAddress address= addressMapper.getAddressById(addressId);
+        if(address==null){
+            throw new Exception("该地址不存在");
+        }
+        if(address.getUserId()!=userId){
+            throw new Exception("该地址不属于该用户");
+        }
+        return address;
     }
 
+    @SneakyThrows
     @Override
     public void delete(Long addressId) {
+        Long userId = TLUtils.getUserId();
+        UserAddress address = addressMapper.getAddressById(addressId);
+        if(address==null){
+            throw new Exception("该地址不存在");
+        }
+        if(address.getUserId()!=userId){
+            throw new Exception("该地址不属于该用户");
+        }
         addressMapper.deleteById(addressId);
     }
 
+    @SneakyThrows
     @Override
     public void update(UserAddressDTO userAddressDTO) {
-        UserAddress userAddress =new UserAddress();
-        BeanUtils.copyProperties(userAddressDTO,userAddress);
-        addressMapper.update(userAddress);
+        Long userId = TLUtils.getUserId();
+        UserAddress address = addressMapper.getAddressById(userAddressDTO.getId());
+        if(address==null){
+            throw new Exception("该地址不存在");
+        }
+        if(address.getUserId()!=userId){
+            throw new Exception("该地址不属于该用户");
+        }
+        BeanUtils.copyProperties(userAddressDTO,address);
+        addressMapper.update(address);
     }
 
     @Override
     public List<UserAddress> getAllAddress() {
         Long userId = TLUtils.getUserId();
-        List<UserAddress> list=addressMapper.getByUserId(userId);
-        return list;
+        return addressMapper.getByUserId(userId);
     }
 }

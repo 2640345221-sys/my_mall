@@ -11,6 +11,7 @@ import my_mall.entity.dto.OrderCartDTO;
 import my_mall.entity.dto.ShoppingCartPageDTO;
 import my_mall.entity.po.ShoppingCart;
 import my_mall.entity.vo.ShoppingCartItemVO;
+import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface ShoppingCartMapper {
@@ -27,4 +28,6 @@ public interface ShoppingCartMapper {
     List<OrderCartDTO> getWithGoods(List<Long> cartItemIds, Long userId);
 
     void deleteBatch(List<Long> cartItemIds,  Long userId);
+    @Select("select * from my_mall.shopping_cart where id=#{id}")
+    ShoppingCart getById(Long cartItemId);
 }

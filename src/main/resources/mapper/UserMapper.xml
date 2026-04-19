@@ -19,4 +19,26 @@
         </set>
         where id=#{id}
     </update>
+    <update id="setStatus">
+        update my_mall.user
+        set locked=#{lockStatus}
+        where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+
+    </update>
+    <select id="getPage" resultType="my_mall.entity.po.User">
+        select * from my_mall.user
+        <where>
+            <if test="locked!=null">
+                locked=#{locked}
+            </if>
+        </where>>
+    </select>
+    <select id="getByLoginName" resultType="my_mall.entity.po.User">
+        select * from my_mall.user
+        where login_name=#{username}
+    </select>
+
 </mapper>

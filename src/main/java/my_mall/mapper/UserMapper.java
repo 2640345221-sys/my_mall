@@ -1,5 +1,7 @@
 package my_mall.mapper;
 
+import com.github.pagehelper.Page;
+import my_mall.entity.dto.UserPageDTO;
 import my_mall.entity.po.User;
 import my_mall.entity.po.UserAddress;
 import org.apache.ibatis.annotations.Mapper;
@@ -23,4 +25,9 @@ public interface UserMapper {
 
     void update(User user);
 
+    Page<User> getPage(UserPageDTO userPageDTO);
+
+    void setStatus(Byte lockStatus, List<Long> ids);
+
+    User getByLoginName(String username);
 }

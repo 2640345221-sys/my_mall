@@ -66,6 +66,23 @@
         </set>
         where id = #{id}
     </update>
+    <update id="deductStock">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE goods
+            SET stock_num = stock_num - #{item.count},
+            update_time = NOW()
+            WHERE id = #{item.id}
+            AND stock_num >= #{item.count}
+        </foreach>
+    </update>
+    <update id="recoverStock">
+        <foreach collection="stockList" item="item" separator=";">
+            UPDATE goods
+            SET stock_num = stock_num + #{item.count},
+            update_time = NOW()
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
 
     <select id="getPage" resultType="my_mall.entity.po.Goods">
         select * from my_mall.goods

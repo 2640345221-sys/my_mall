@@ -35,6 +35,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         if(userId==null){
             throw new  Exception("用户未登录");
         }
+        Goods goods=goodsMapper.getById(cartItemDTO.getGoodsId());
+        if(goods==null){
+            throw new Exception("商品不存在"+goods.getId());
+        }
+        if(!goods.getSellStatus()){
+            throw new Exception("商品已下架"+goods.getName());
+        }
+
         ShoppingCart shoppingCart = new ShoppingCart();
         shoppingCart.setUserId(userId);
         shoppingCart.setGoodsId(cartItemDTO.getGoodsId());
@@ -59,15 +67,33 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public void update(ShoppingCartDTO shoppingCartDTO) {
-        ShoppingCart shoppingCart = new ShoppingCart();
-        shoppingCart.setId(shoppingCartDTO.getCartItemId());
-        shoppingCart.setGoodsCount(shoppingCartDTO.getGoodsCount());
-        shoppingCart.setUpdateTime(LocalDateTime.now());
-        shoppingCartMapper.update(shoppingCart);
+        Long userId= TLUtils.getUserId();
+        ShoppingCart cart = shoppingCartMapper.getById(shoppingCartDTO.getCartItemId());
+        if (cart == null) {
+            throw new RuntimeException("购物车项不存在");
+        }
+        if (!cart.getUserId().equals(userId)) {
+            throw new RuntimeException("无权操作");
+        }
+        if (shoppingCartDTO.getGoodsCount() < 1 || shoppingCartDTO.getGoodsCount() > 5) {
+            throw new RuntimeException("数量超出限制");
+        }
+        cart.setGoodsCount(shoppingCartDTO.getGoodsCount());
+        cart.setUpdateTime(LocalDateTime.now());
+        shoppingCartMapper.update(cart);
     }
 
+    @SneakyThrows
     @Override
     public void delete(Long cartItemId) {
+        Long userId= TLUtils.getUserId();
+        ShoppingCart cart = shoppingCartMapper.getById(cartItemId);
+        if (cart == null) {
+            throw new Exception("订单不存在");
+        }
+        if(cart.getUserId()!=userId){
+            throw new Exception("修改权限不足");
+        }
         shoppingCartMapper.deleteById(cartItemId);
     }
 

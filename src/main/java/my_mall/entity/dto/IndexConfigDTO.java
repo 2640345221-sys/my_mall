@@ -7,8 +7,10 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
-public class CarouselInsertDTO {
+public class IndexConfigDTO {
+    private Long id;
+    private String name;
     private Integer rank;
-    private String url;
-    private String redirectUrl;
+    private Byte type;
+    private Long goodsId;
 }

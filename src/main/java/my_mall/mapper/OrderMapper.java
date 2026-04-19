@@ -21,4 +21,6 @@ public interface OrderMapper {
     void setStatus(List<Long> ids, byte b, LocalDateTime now);
 
     Page<Order> aGetByUserId(OrderPageDTO orderPageDTO, Long userId);
+
+    List<Order> getByIds(List<Long> ids);
 }

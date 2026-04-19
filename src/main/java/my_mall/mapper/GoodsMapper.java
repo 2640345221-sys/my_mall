@@ -3,6 +3,7 @@ package my_mall.mapper;
 import com.github.pagehelper.Page;
 import my_mall.entity.dto.GoodsPageDTO;
 import my_mall.entity.dto.GoodsPageSearchDTO;
+import my_mall.entity.dto.StockDeductDTO;
 import my_mall.entity.po.Goods;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -23,4 +24,10 @@ public interface GoodsMapper {
     void updateStatus(Byte sellStatus, List<Long> ids);
 
     void updateGoods(Goods goods);
+
+    void deductStock(List<StockDeductDTO> list);
+
+    void recoverStock(List<StockDeductDTO> stockList);
+    @Select("select * from my_mall.goods where category_id=#{categoryId} and name=#{name}")
+    Goods getByCategoryAndName(Long categoryId, String name);
 }
