@@ -1,6 +1,4 @@
-package my_mall.common;
-
-import lombok.Data;
+package my_mall.enums;
 
 
 public enum OrderStatusEnum {
@@ -13,17 +11,17 @@ public enum OrderStatusEnum {
     ORDER_CLOSE_BY_EXPIRED(-2,"超时关闭"),
     ORDER_CLOSE_BY_ADMIN(-3,"商家关闭");
 
-    private int status;
+    private Integer status;
     private String name;
-    OrderStatusEnum(int status,String name){
+    OrderStatusEnum(Integer status,String name){
         this.status=status;
         this.name=name;
     }
-    public int getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public static OrderStatusEnum getOrderStatusEnum(int status){
+    public static OrderStatusEnum getOrderStatusEnum(Integer status){
         for(OrderStatusEnum orderStatusEnum:OrderStatusEnum.values()){
             if(orderStatusEnum.status==status){
                 return orderStatusEnum;
@@ -32,11 +30,11 @@ public enum OrderStatusEnum {
         return null;
     }
 
-    public static boolean canCancel(int status){
+    public static boolean canCancel(Integer status){
         return status==ORDER_PRE_PAY.status;
     }
 
-    public static boolean canCloseByUser(int status){
+    public static boolean canCloseByUser(Integer status){
         return status==ORDER_EXPRESS.status;
     }
 

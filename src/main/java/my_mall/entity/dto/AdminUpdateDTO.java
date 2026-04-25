@@ -11,5 +11,4 @@ public class AdminUpdateDTO {
     private String nickName;
     private String password;
     private String username;
-
 }

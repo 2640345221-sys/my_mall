@@ -14,7 +14,6 @@ public class Carousel {
     private String url;
     private String redirectUrl;
     private Integer rank;
-    private Boolean isDeleted;
     private  LocalDateTime createTime;
     private  LocalDateTime updateTime;
     private  Integer createUser;

@@ -14,9 +14,9 @@ public class Order {
     private  String orderNo;
     private  Long userId;
     private  Integer totalPrice;
-    private  Byte payStatus;
-    private  Byte payType;
-    private  Byte orderStatus;
+    private  Integer payStatus;
+    private  Integer payType;
+    private  Integer orderStatus;
     private  LocalDateTime payTime;
     private  LocalDateTime createTime;
     private  LocalDateTime updateTime;

@@ -34,7 +34,7 @@
             <if test="locked!=null">
                 locked=#{locked}
             </if>
-        </where>>
+        </where>
     </select>
     <select id="getByLoginName" resultType="my_mall.entity.po.User">
         select * from my_mall.user

@@ -7,7 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
-public class CarouselUpdateDTO {
+public class CarouselDTO {
+    private Long id;
     private Integer rank;
     private String url;
     private String redirectUrl;

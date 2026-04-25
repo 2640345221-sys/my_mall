@@ -4,6 +4,7 @@ import com.github.pagehelper.Page;
 import my_mall.entity.dto.CarouselPageDTO;
 import my_mall.entity.po.Carousel;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -20,4 +21,6 @@ public interface CarouselMapper {
     Carousel getById(Long id);
 
     void deleteBatch(List<Long> ids);
+    @Select("select * from my_mall.carousel")
+    List<Carousel> getList();
 }

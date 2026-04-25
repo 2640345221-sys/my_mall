@@ -8,9 +8,9 @@ import lombok.*;
 @ToString
 @Builder
 public class GoodsPageSearchDTO {
-    String keyword;
-    Integer categoryId;
-    String orderBy;
-    Integer pageNumber;
-    Integer pageSize;
+    private String keyword;
+    private  Integer categoryId;
+    private  String orderBy;
+    private  Integer pageNumber;
+    private  Integer pageSize;
 }

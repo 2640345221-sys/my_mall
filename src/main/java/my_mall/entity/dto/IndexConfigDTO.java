@@ -11,6 +11,6 @@ public class IndexConfigDTO {
     private Long id;
     private String name;
     private Integer rank;
-    private Byte type;
+    private Integer type;
     private Long goodsId;
 }

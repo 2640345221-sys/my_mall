@@ -1,8 +1,12 @@
 package my_mall.entity.vo;
 
-import lombok.*;
-
 import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @AllArgsConstructor
@@ -20,4 +24,7 @@ public class GoodsDetailVO {
     private  Integer originalPrice;
     private  Integer sellingPrice;
     private  String tag;
+    private Integer stockNum;
+    private Long categoryId;
+    private Boolean sellStatus;
 }

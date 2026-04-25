@@ -25,6 +25,7 @@ public class OrderController {
     @Operation(summary = "创建订单")
     @PostMapping("/saveOrder")
     public Result saveOrder(@RequestBody OrderDTO orderDTO) {
+        log.info("开始创建订单{}",orderDTO);
         orderService.save(orderDTO);
         return Result.success();
     }
@@ -32,6 +33,7 @@ public class OrderController {
     @Operation(summary = "取消订单")
     @PutMapping("/{orderNo}/cancel")
     public Result cancelOrder(@PathVariable("orderNo") String orderNo) {
+        log.info("取消订单号为{}的订单",orderNo);
         orderService.cancel(orderNo);
         return Result.success();
     }
@@ -39,6 +41,7 @@ public class OrderController {
     @Operation(summary = "确认收货")
     @PutMapping("/{orderNo}/confirm")
     public Result confirmOrder(@PathVariable("orderNo") String orderNo) {
+        log.info("用户确认收货{}",orderNo);
         orderService.confirm(orderNo);
         return Result.success();
     }
@@ -46,13 +49,15 @@ public class OrderController {
     @Operation(summary = "获取订单详情")
     @GetMapping("/{orderNo}")
     public Result<OrderDetailVO> getOrderDetail(@PathVariable("orderNo") String orderNo) {
+        log.info("开始获取订单号为{}的订单",orderNo);
         OrderDetailVO orderDetailVO=orderService.getOrderDetail(orderNo);
         return Result.success(orderDetailVO);
     }
 
     @Operation(summary = "分页查询订单")
-    @GetMapping("page")
+    @GetMapping("/page")
     public Result<PageResult> getPage(OrderPageDTO orderPageDTO) {
+        log.info("开始查询订单{}",orderPageDTO);
         PageResult pageResult=orderService.getPage(orderPageDTO);
         return Result.success(pageResult);
     }
@@ -60,6 +65,7 @@ public class OrderController {
     @Operation(summary = "支付成功回调")
     @GetMapping("/paySuccess")
     public Result paySuccess(OrderPayDTO orderPayDTO) {
+        log.info("开始进行支付操作{}",orderPayDTO);
         orderService.paySuccess(orderPayDTO);
         return Result.success();
     }

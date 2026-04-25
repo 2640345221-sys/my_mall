@@ -83,6 +83,10 @@
             WHERE id = #{item.id}
         </foreach>
     </update>
+    <delete id="deleteBatch">
+        delete from my_mall.goods
+        where id =#{id}
+    </delete>
 
     <select id="getPage" resultType="my_mall.entity.po.Goods">
         select * from my_mall.goods
@@ -105,5 +109,12 @@
                 and sell_status=#{sellStatus}
             </if>
         </where>
+    </select>
+    <select id="getByIdBatch" resultType="my_mall.entity.po.Goods">
+        select * from my_mall.goods
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
     </select>
 </mapper>

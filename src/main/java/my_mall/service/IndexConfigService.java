@@ -2,6 +2,7 @@ package my_mall.service;
 
 import my_mall.entity.dto.IndexConfigDTO;
 import my_mall.entity.dto.IndexPageDTO;
+import my_mall.entity.po.Goods;
 import my_mall.entity.po.IndexConfig;
 import my_mall.result.PageResult;
 
@@ -17,4 +18,10 @@ public interface IndexConfigService {
     void update(IndexConfigDTO indexConfigDTO);
 
     void insert(IndexConfigDTO indexConfigDTO);
+
+    List<Goods> getNewGoods();
+
+    List<Goods> getPopularGoods();
+
+    List<Goods> getRecommendGoods();
 }

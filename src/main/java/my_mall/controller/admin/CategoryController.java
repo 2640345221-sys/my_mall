@@ -21,12 +21,11 @@ import java.util.List;
 public class CategoryController {
     @Resource
     private CategoryService categoryService;
-    @Autowired
-    private CategoryMapper categoryMapper;
 
     @Operation(summary = "新增分类")
     @PostMapping
     public Result insert(@RequestBody CategoryDTO categoryInsertDTO) {
+        log.info("新增商品分类{}",categoryInsertDTO);
         categoryService.insert(categoryInsertDTO);
         return Result.success();
     }
@@ -34,6 +33,7 @@ public class CategoryController {
     @Operation(summary = "批量删除分类")
     @DeleteMapping
     public Result delete(@RequestParam List<Long> ids ) {
+        log.info("删除商品分类,ids:{}",ids);
         categoryService.deleteBatch(ids);
         return Result.success();
     }
@@ -41,6 +41,7 @@ public class CategoryController {
     @Operation(summary = "更新分类")
     @PutMapping
     public Result update(@RequestBody CategoryDTO categoryDTO) {
+        log.info("更新商品分类{}",categoryDTO);
         categoryService.update(categoryDTO);
         return Result.success();
     }
@@ -48,6 +49,7 @@ public class CategoryController {
     @Operation(summary = "根据ID查询分类")
     @GetMapping("/{id}")
     public Result<GoodsCategory> getById(@PathVariable Long id) {
+        log.info("查询id为{}的商品分类",id);
         GoodsCategory category=categoryService.getById(id);
         return Result.success(category);
     }
@@ -55,6 +57,7 @@ public class CategoryController {
     @Operation(summary = "获取所有分类")
     @GetMapping
     public Result<List<GoodsCategory>> getAll() {
+        log.info("获取所有商品分类");
         return Result.success(categoryService.getAll());
     }
 }

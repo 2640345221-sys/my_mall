@@ -35,8 +35,10 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
             log.info("jwt校验token:{}",token);
             Claims claims=JwtUtils.parseJwtToken(token,jwtProperties.getAdminSecretKey());
             Long userId=Long.valueOf(claims.get("userId").toString());
-            log.info("当前管理员id:{}",userId);
-            TLUtils.setUserId(userId);
+            if(TLUtils.getUserId()==null){
+                log.info("当前管理员id:{}",userId);
+                TLUtils.setUserId(userId);
+            }
             return true;
         }catch (Exception e){
             log.error("JWT验证失败: {}", e.getMessage());

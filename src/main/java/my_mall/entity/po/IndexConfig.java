@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class IndexConfig {
     private  Long id;
     private  String name;
-    private  Byte type;
+    private  Integer type;
     private Long goodsId;
     private   LocalDateTime createTime;
     private  LocalDateTime updateTime;
@@ -20,5 +20,4 @@ public class IndexConfig {
     private  Integer updateUser;
     private   String redirectUrl;
     private   Integer rank;
-    private   Boolean isDeleted;
 }

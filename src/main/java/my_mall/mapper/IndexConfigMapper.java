@@ -20,4 +20,6 @@ public interface IndexConfigMapper {
     void update(IndexConfig indexConfig);
 
     void insert(IndexConfig indexConfig);
+
+    Page<IndexConfig> getByType(Integer type);
 }

@@ -6,13 +6,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-import lombok.SneakyThrows;
-import my_mall.common.OrderStatusEnum;
-import my_mall.entity.dto.*;
-import my_mall.entity.po.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +18,30 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 
 import jakarta.annotation.Resource;
+import lombok.SneakyThrows;
+import my_mall.constant.MessageConstant;
+import my_mall.entity.dto.OrderCartDTO;
+import my_mall.entity.dto.OrderDTO;
+import my_mall.entity.dto.OrderPageDTO;
+import my_mall.entity.dto.OrderPayDTO;
+import my_mall.entity.dto.StockDeductDTO;
+import my_mall.entity.po.Goods;
+import my_mall.entity.po.Order;
+import my_mall.entity.po.OrderAddress;
+import my_mall.entity.po.OrderItem;
+import my_mall.entity.po.UserAddress;
 import my_mall.entity.vo.OrderDetailVO;
+import my_mall.enums.OrderPayStatusEnum;
+import my_mall.enums.OrderPayTypeEnum;
+import my_mall.enums.OrderStatusEnum;
+import my_mall.exception.AddressNotExistException;
+import my_mall.exception.BaseException;
+import my_mall.exception.CartItemNotExistException;
+import my_mall.exception.GoodsIsNotSellingException;
+import my_mall.exception.GoodsNotExistException;
+import my_mall.exception.OrderNotExistException;
+import my_mall.exception.PowerIsNotEnoughException;
+import my_mall.exception.StockNumNotEnoughException;
 import my_mall.mapper.AddressMapper;
 import my_mall.mapper.GoodsMapper;
 import my_mall.mapper.OrderAddressMapper;
@@ -56,12 +76,12 @@ public class OrderServiceImpl implements OrderService {
         Long userId = TLUtils.getUserId();
         UserAddress userAddress =addressMapper.getAddressById(addressId);
         if(userAddress==null||!userAddress.getUserId().equals(userId)){
-            throw new Exception("地址不存在或无权限");
+            throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST + "，地址ID：" + addressId + "，操作用户ID：" + userId);
         }
         //连接查询，将cart和goods关联，同时校验购物车项是否属于当前用户
         List<OrderCartDTO> cartList=shoppingCartMapper.getWithGoods(cartItemIds, userId);
         if(cartList==null|| cartList.isEmpty()){
-            throw new Exception("购物车数据为空");
+            throw new CartItemNotExistException(MessageConstant.CART_EMPTY + "，购物车项ID：" + cartItemIds + "，操作用户ID：" + userId);
         }
         List<StockDeductDTO> list=new ArrayList<>();
 
@@ -69,13 +89,13 @@ public class OrderServiceImpl implements OrderService {
         for(OrderCartDTO cartItem:cartList){
             Goods goods=goodsMapper.getById(cartItem.getGoodsId());
             if(goods==null){
-                throw new Exception("商品不存在"+cartItem.getGoodsId());
+                throw new GoodsNotExistException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + cartItem.getGoodsId() + "，操作用户ID：" + userId);
             }
             if(!goods.getSellStatus()){
-                throw new Exception("商品已下架"+cartItem.getGoodsName());
+                throw new GoodsIsNotSellingException(MessageConstant.GOODS_NOT_SELLING + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，操作用户ID：" + userId);
             }
             if(cartItem.getCount()>goods.getStockNum()){
-                throw new Exception("商品库存不足"+cartItem.getGoodsName());
+                throw new StockNumNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，库存：" + goods.getStockNum() + "，操作用户ID：" + userId);
             }
             totalPrice+=cartItem.getCount()*goods.getSellingPrice();
             cartItem.setPrice(goods.getSellingPrice());
@@ -90,9 +110,9 @@ public class OrderServiceImpl implements OrderService {
         order.setCreateTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         order.setTotalPrice(totalPrice);
-        order.setPayStatus((byte) 0);
-        order.setOrderStatus((byte) 0);
-        order.setPayType((byte) 0);
+        order.setPayStatus(OrderPayStatusEnum.NO_PAY.getValue());
+        order.setOrderStatus(OrderStatusEnum.ORDER_PRE_PAY.getStatus());
+        order.setPayType(OrderPayTypeEnum.NO_PAY.getValue());
         order.setExtraInfo("");
         order.setOrderNo(generateOrderNo());
         orderMapper.insert(order);
@@ -117,17 +137,18 @@ public class OrderServiceImpl implements OrderService {
 
     @SneakyThrows
     @Override
+    @Transactional
     public void cancel(String orderNo) {
         Long userId=TLUtils.getUserId();
         Order order=orderMapper.getByOrderNo(orderNo);
         if(order==null){
-            throw new Exception("订单不存在");
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单号：" + orderNo + "，操作用户ID：" + userId);
         }
         if(!order.getUserId().equals(userId)){
-            throw new Exception("无权操作此订单");
+            throw new PowerIsNotEnoughException(MessageConstant.POWER_NOT_ENOUGH_ORDER + "，订单号：" + orderNo + "，订单用户ID：" + order.getUserId() + "，操作用户ID：" + userId);
         }
         if(!OrderStatusEnum.canCancel(order.getOrderStatus())){
-            throw new Exception("该订单无法取消");
+            throw new BaseException(MessageConstant.ORDER_CANNOT_CANCEL);
         }
 
         List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
@@ -136,7 +157,7 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
         goodsMapper.recoverStock(stockRecoverList);
 
-        order.setOrderStatus((byte)-2);
+        order.setOrderStatus(OrderStatusEnum.ORDER_CLOSE_BY_USER.getStatus());
         order.setOrderNo(orderNo);
         order.setExtraInfo("用户取消订单");
         order.setUpdateTime(LocalDateTime.now());
@@ -145,19 +166,20 @@ public class OrderServiceImpl implements OrderService {
 
     @SneakyThrows
     @Override
+    @Transactional
     public void confirm(String orderNo) {
         Long userId=TLUtils.getUserId();
         Order order=orderMapper.getByOrderNo(orderNo);
         if (order == null) {
-            throw new RuntimeException("订单不存在");
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单号：" + orderNo + "，操作用户ID：" + userId);
         }
         if (!order.getUserId().equals(userId)) {
-            throw new RuntimeException("无权操作");
+            throw new PowerIsNotEnoughException(MessageConstant.POWER_NOT_ENOUGH + "，订单号：" + orderNo + "，订单用户ID：" + order.getUserId() + "，操作用户ID：" + userId);
         }
-        if(order.getOrderStatus()!=OrderStatusEnum.ORDER_EXPRESS.getStatus()){
-            throw new Exception("订单状态错误,无法确认");
+        if(!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_EXPRESS.getStatus())){
+            throw new BaseException(MessageConstant.ORDER_STATUS_ERROR + ",无法确认");
         }
-        order.setOrderStatus((byte)4);
+        order.setOrderStatus((OrderStatusEnum.ORDER_SUCCESS.getStatus()));
         order.setOrderNo(orderNo);
         order.setUpdateTime(LocalDateTime.now());
         orderMapper.update(order);
@@ -168,10 +190,10 @@ public class OrderServiceImpl implements OrderService {
         Long userId=TLUtils.getUserId();
         Order order=orderMapper.getByOrderNo(orderNo);
         if (order == null) {
-            throw new RuntimeException("订单不存在");
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单号：" + orderNo + "，操作用户ID：" + userId);
         }
         if (!order.getUserId().equals(userId)) {
-            throw new RuntimeException("无权操作");
+            throw new PowerIsNotEnoughException(MessageConstant.POWER_NOT_ENOUGH + "，订单号：" + orderNo + "，订单用户ID：" + order.getUserId() + "，操作用户ID：" + userId);
         }
         List<OrderItem> itemList=orderItemMapper.getByOrderId(order.getId());
         List<OrderCartDTO> list=itemList.stream().map(x->{
@@ -190,7 +212,7 @@ public class OrderServiceImpl implements OrderService {
         Long userId = TLUtils.getUserId();
         PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
         Page<Order> page=orderMapper.getByUserId(orderPageDTO,userId);
-        List<Long> ids=page.getResult().stream().map(x->x.getId()).collect(Collectors.toList());
+        List<Long> ids=page.getResult().stream().map(Order::getId).collect(Collectors.toList());
         List<OrderItem> list=orderItemMapper.getBatchByOrderId(ids);
         Map<Long, List<OrderItem>> itemMap = list.stream()
                 .collect(Collectors.groupingBy(OrderItem::getOrderId));
@@ -217,21 +239,22 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void paySuccess(OrderPayDTO orderPayDTO) {
         Long userId=TLUtils.getUserId();
         Order order=orderMapper.getByOrderNo(orderPayDTO.getOrderNo());
         if (order == null) {
-            throw new RuntimeException("订单不存在");
+            throw new OrderNotExistException("订单不存在");
         }
         if (!order.getUserId().equals(userId)) {
-            throw new RuntimeException("无权操作");
+            throw new PowerIsNotEnoughException("无权操作");
         }
-        if (order.getOrderStatus() != OrderStatusEnum.ORDER_PRE_PAY.getStatus()) {
-            throw new RuntimeException("订单状态错误，无法支付");
+        if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PRE_PAY.getStatus())) {
+            throw new BaseException(MessageConstant.ORDER_CANNOT_PAY);
         }
-        order.setPayStatus((byte) 1);
+        order.setPayStatus(OrderPayStatusEnum.PAID.getValue());
         order.setPayType(orderPayDTO.getPayType());
-        order.setOrderStatus((byte) OrderStatusEnum.ORDER_PAID.getStatus());
+        order.setOrderStatus(OrderStatusEnum.ORDER_PAID.getStatus());
         order.setPayTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         orderMapper.update(order);
@@ -242,16 +265,16 @@ public class OrderServiceImpl implements OrderService {
     public void checkDone(List<Long> orderIds) {
         List<Order> orders = orderMapper.getByIds(orderIds);
         if (orders == null || orders.isEmpty()) {
-            throw new RuntimeException("订单不存在");
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
         }
 
         for (Order order : orders) {
-            if (order.getOrderStatus() != OrderStatusEnum.ORDER_PAID.getStatus()) {
-                throw new RuntimeException("订单" + order.getOrderNo() + "状态不是已支付，无法配货");
+            if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PAID.getStatus())) {
+                throw new BaseException("订单" + order.getOrderNo() + MessageConstant.ORDER_CANNOT_CHECK);
             }
         }
 
-        orderMapper.setStatus(orderIds, (byte) OrderStatusEnum.ORDER_PACKAGED.getStatus(), LocalDateTime.now());
+        orderMapper.setStatus(orderIds, OrderStatusEnum.ORDER_PACKAGED.getStatus(), LocalDateTime.now());
     }
 
     @Override
@@ -259,16 +282,16 @@ public class OrderServiceImpl implements OrderService {
     public void checkOut(List<Long> orderIds) {
         List<Order> orders = orderMapper.getByIds(orderIds);
         if (orders == null || orders.isEmpty()) {
-            throw new RuntimeException("订单不存在");
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
         }
 
         for (Order order : orders) {
-            if (order.getOrderStatus() != OrderStatusEnum.ORDER_PACKAGED.getStatus()) {
-                throw new RuntimeException("订单" + order.getOrderNo() + "状态不是配货完成，无法出库");
+            if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PACKAGED.getStatus())) {
+                throw new BaseException("订单" + order.getOrderNo() + MessageConstant.ORDER_CANNOT_CHECKOUT);
             }
         }
 
-        orderMapper.setStatus(orderIds, (byte) OrderStatusEnum.ORDER_EXPRESS.getStatus(), LocalDateTime.now());
+        orderMapper.setStatus(orderIds,  OrderStatusEnum.ORDER_EXPRESS.getStatus(), LocalDateTime.now());
     }
 
     @Override
@@ -276,7 +299,7 @@ public class OrderServiceImpl implements OrderService {
     public void closeOrder(List<Long> orderIds) {
         List<Order> orders = orderMapper.getByIds(orderIds);
         if (orders == null || orders.isEmpty()) {
-            throw new RuntimeException("订单不存在");
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
         }
 
         for (Order order : orders) {
@@ -284,7 +307,7 @@ public class OrderServiceImpl implements OrderService {
             if (status != OrderStatusEnum.ORDER_PRE_PAY.getStatus() 
                     && status != OrderStatusEnum.ORDER_PAID.getStatus()
                     && status != OrderStatusEnum.ORDER_PACKAGED.getStatus()) {
-                throw new RuntimeException("订单" + order.getOrderNo() + "当前状态无法关闭");
+                throw new BaseException("订单" + order.getOrderNo() + MessageConstant.ORDER_CANNOT_CLOSE);
             }
         }
 
@@ -296,7 +319,7 @@ public class OrderServiceImpl implements OrderService {
             goodsMapper.recoverStock(stockRecoverList);
         }
 
-        orderMapper.setStatus(orderIds, (byte) OrderStatusEnum.ORDER_CLOSE_BY_ADMIN.getStatus(), LocalDateTime.now());
+        orderMapper.setStatus(orderIds, OrderStatusEnum.ORDER_CLOSE_BY_ADMIN.getStatus(), LocalDateTime.now());
     }
 
     @Override

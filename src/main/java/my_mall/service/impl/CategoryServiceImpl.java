@@ -1,14 +1,17 @@
 package my_mall.service.impl;
 
 import jakarta.annotation.Resource;
+import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.CategoryDTO;
 import my_mall.entity.po.GoodsCategory;
 import my_mall.entity.vo.IndexCategoryVO;
+import my_mall.exception.CategoryNotExistException;
 import my_mall.mapper.CategoryMapper;
 import my_mall.service.CategoryService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -77,8 +80,12 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void update(CategoryDTO categoryDTO) {
-        GoodsCategory category = new GoodsCategory();
+        GoodsCategory category =categoryMapper.getById(categoryDTO.getId());
+        if(category==null){
+            throw new CategoryNotExistException(MessageConstant.CATEGORY_NOT_EXIST + "，分类ID：" + categoryDTO.getId() + "，操作用户ID：" + TLUtils.getUserId());
+        }
         BeanUtils.copyProperties(categoryDTO, category);
         category.setUpdateTime(LocalDateTime.now());
         category.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
@@ -87,7 +94,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public GoodsCategory getById(Long id) {
-        return categoryMapper.getById(id);
+        GoodsCategory category = categoryMapper.getById(id);
+        if(category==null){
+            throw new CategoryNotExistException(MessageConstant.CATEGORY_NOT_EXIST + "，分类ID：" + id + "，操作用户ID：" + TLUtils.getUserId());
+        }
+        return category;
     }
 
     @Override

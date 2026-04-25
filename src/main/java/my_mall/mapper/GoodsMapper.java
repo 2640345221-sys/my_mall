@@ -21,7 +21,7 @@ public interface GoodsMapper {
 
     Page<Goods> page(GoodsPageDTO goodsPageDTO);
 
-    void updateStatus(Byte sellStatus, List<Long> ids);
+    void updateStatus(Integer sellStatus, List<Long> ids);
 
     void updateGoods(Goods goods);
 
@@ -30,4 +30,8 @@ public interface GoodsMapper {
     void recoverStock(List<StockDeductDTO> stockList);
     @Select("select * from my_mall.goods where category_id=#{categoryId} and name=#{name}")
     Goods getByCategoryAndName(Long categoryId, String name);
+
+    List<Goods> getByIdBatch(List<Long> ids);
+
+    void deleteBatch(Long id);
 }

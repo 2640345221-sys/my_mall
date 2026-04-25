@@ -13,5 +13,5 @@ public class ShoppingCartItemVO {
     private String coverImg;
     private Long goodsId;
     private String goodsName;
-    private String sellingPrice;
+    private Integer sellingPrice;
 }

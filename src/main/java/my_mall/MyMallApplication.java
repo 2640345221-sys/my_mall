@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class MyMallApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(MyMallApplication.class, args);
     }
 

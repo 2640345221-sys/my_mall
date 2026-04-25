@@ -9,5 +9,5 @@ import lombok.*;
 @Builder
 public class OrderPayDTO {
     private String orderNo;
-    private Byte payType;
+    private Integer payType;
 }

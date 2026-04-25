@@ -25,6 +25,7 @@ public class GoodsController {
     @Operation(summary = "获取商品详情")
     @GetMapping("/detail/{goodsId}")
     public Result<GoodsDetailVO> getGoodsDetail(@PathVariable("goodsId") Long goodsId){
+        log.info("获取id为{}的商品信息",goodsId);
         GoodsDetailVO goodsDetailVO=goodsService.getGoodsDetail(goodsId);
         return  Result.success(goodsDetailVO);
     }
@@ -32,6 +33,7 @@ public class GoodsController {
     @Operation(summary = "搜索商品")
     @GetMapping("/search")
     public Result<PageResult> search(GoodsPageSearchDTO goodsPageSearchDTO){
+        log.info("开始搜索商品信息{}",goodsPageSearchDTO);
         PageResult pageResult=goodsService.search(goodsPageSearchDTO);
         return Result.success(pageResult);
     }

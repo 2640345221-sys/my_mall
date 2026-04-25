@@ -8,6 +8,7 @@ import my_mall.entity.dto.UserAddressDTO;
 import my_mall.entity.po.UserAddress;
 import my_mall.result.Result;
 import my_mall.service.AddressService;
+import my_mall.utils.TLUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class AddressController {
     @Operation(summary = "添加地址")
     @PostMapping
     public Result addAddress(@RequestBody UserAddressDTO userAddressDTO) {
+        log.info("开始添加的地址{}",userAddressDTO);
         addressService.insert(userAddressDTO);
         return Result.success();
     }
@@ -30,6 +32,7 @@ public class AddressController {
     @Operation(summary = "获取默认地址")
     @GetMapping("/default")
     public Result getDefaultAddress(){
+        log.info("获取默认用户地址");
         UserAddress address=addressService.getDefaultAddress();
         return Result.success(address);
     }
@@ -37,6 +40,7 @@ public class AddressController {
     @Operation(summary = "获取指定地址")
     @GetMapping("/{addressId}")
     public Result<UserAddress> getAddress (@PathVariable("addressId") Long addressId){
+        log.info("获取id为{}的地址",addressId);
         UserAddress userAddress=addressService.getAddress(addressId);
         return Result.success(userAddress);
     }
@@ -44,6 +48,7 @@ public class AddressController {
     @Operation(summary = "删除地址")
     @DeleteMapping("/{addressId}")
     public Result deleteAddress(@PathVariable("addressId") Long addressId){
+        log.info("删除id为{}的地址",addressId);
         addressService.delete(addressId);
         return Result.success();
     }
@@ -51,6 +56,7 @@ public class AddressController {
     @Operation(summary = "更新地址")
     @PutMapping
     public Result updateAddress(@RequestBody UserAddressDTO userAddressDTO){
+        log.info("开始更新地址{}",userAddressDTO);
         addressService.update(userAddressDTO);
         return Result.success();
     }
@@ -58,6 +64,7 @@ public class AddressController {
     @Operation(summary = "获取所有地址")
     @GetMapping
     public Result<List<UserAddress>> getAllAddress(){
+        log.info("获取所有地址");
         List<UserAddress> list=addressService.getAllAddress();
         return Result.success(list);
     }

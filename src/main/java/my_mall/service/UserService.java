@@ -19,5 +19,5 @@ public interface UserService {
 
     PageResult page(UserPageDTO userPageDTO);
 
-    void setStatus(Byte lockStatus, List<Long> ids);
+    void setStatus(Integer lockStatus, List<Long> ids);
 }

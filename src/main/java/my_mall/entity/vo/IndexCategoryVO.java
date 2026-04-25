@@ -15,5 +15,4 @@ public class IndexCategoryVO {
     private String name;
     private Long parentId;
     private List<IndexCategoryVO> children;
-
 }

@@ -53,4 +53,10 @@
             where type=#{type}
         </if>
     </select>
+
+    <select id="getByType" resultType="my_mall.entity.po.IndexConfig">
+        select * from my_mall.index_config
+        where type = #{type}
+        order by `rank` asc
+    </select>
 </mapper>

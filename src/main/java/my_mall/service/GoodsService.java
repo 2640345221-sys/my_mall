@@ -19,7 +19,9 @@ public interface GoodsService {
 
     PageResult page(GoodsPageDTO goodsPageDTO);
 
-    void updateStatus(Byte sellStatus, List<Long> ids);
+    void updateStatus(Integer sellStatus, List<Long> ids);
 
     void updateGoods(Goods goods);
+
+    void deleteGoods(Long ids);
 }

@@ -27,9 +27,11 @@
     </select>
     <select id="getBatchByOrderId" resultType="my_mall.entity.po.OrderItem">
         SELECT * FROM my_mall.order_item
-        WHERE order_id IN
-        <foreach collection="ids" item="orderId" open="(" separator="," close=")">
-            #{orderId}
-        </foreach>
+        <if test="ids!=null and ids.size()>0">
+            WHERE order_id IN
+            <foreach collection="ids" item="orderId" open="(" separator="," close=")">
+                #{orderId}
+            </foreach>
+        </if>
     </select>
 </mapper>

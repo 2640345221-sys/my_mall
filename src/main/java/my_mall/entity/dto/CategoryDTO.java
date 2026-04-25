@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 public class CategoryDTO {
     private Long id;
-    private Byte level;
+    private Integer level;
     private String name;
     private Integer rank;
     private Long parentId;

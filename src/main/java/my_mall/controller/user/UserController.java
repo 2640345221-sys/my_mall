@@ -52,12 +52,14 @@ public class UserController {
                 .loginName(user.getLoginName())
                 .token(token)
                 .build();
+        log.info("userLoginVO:{}",userLoginVO);
         return Result.success(userLoginVO);
     }
 
     @Operation(summary = "用户登出")
     @PostMapping("/logout")
     public Result logout(){
+        log.info("用户退出:{}",TLUtils.getUserId());
         TLUtils.remove();
         return Result.success();
     }
@@ -81,6 +83,7 @@ public class UserController {
     @Operation(summary = "更新用户信息")
     @PutMapping("/info")
     public Result updateUserInfo(@RequestBody UserVO userVO){
+        log.info("开始更新用户信息{}",userVO);
         userService.updateUserInfo(userVO);
         return Result.success();
     }

@@ -27,7 +27,7 @@ public interface UserMapper {
 
     Page<User> getPage(UserPageDTO userPageDTO);
 
-    void setStatus(Byte lockStatus, List<Long> ids);
+    void setStatus(Integer lockStatus, List<Long> ids);
 
     User getByLoginName(String username);
 }

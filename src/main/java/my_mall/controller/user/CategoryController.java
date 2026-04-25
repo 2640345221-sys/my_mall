@@ -24,7 +24,8 @@ public class CategoryController {
 
     @Operation(summary = "获取分类列表")
     @GetMapping
-    public Result getCategory() {
+    public Result<List<IndexCategoryVO>> getCategory() {
+        log.info("开始获取分类列表");
         List<IndexCategoryVO> indexCategoryVOs = categoryService.getCategory();
         return Result.success(indexCategoryVOs);
     }

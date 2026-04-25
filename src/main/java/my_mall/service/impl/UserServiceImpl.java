@@ -4,16 +4,21 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
+import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.LoginDTO;
 import my_mall.entity.dto.UserPageDTO;
 import my_mall.entity.po.User;
 import my_mall.entity.vo.UserVO;
+import my_mall.exception.PasswordErrorException;
+import my_mall.exception.UserIsLockedException;
+import my_mall.exception.UserNameNotExistException;
 import my_mall.mapper.UserMapper;
 import my_mall.result.PageResult;
 import my_mall.service.UserService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
@@ -37,7 +42,7 @@ public class UserServiceImpl  implements UserService {
             return null;
         }
         if(user.getLocked()==true){
-            throw new Exception("用户被锁定");
+            throw new UserIsLockedException(MessageConstant.USER_LOCKED + "，用户ID：" + user.getId() + "，操作用户ID：" + TLUtils.getUserId());
         }
         return user;
     }
@@ -51,10 +56,10 @@ public class UserServiceImpl  implements UserService {
             nickName = "user" + System.currentTimeMillis() + (int)(Math.random() * 100);
         }
         if(userMapper.getByLoginName(loginDTO.getUsername()) != null){
-            throw new Exception("账号已存在");
+            throw new UserNameNotExistException(MessageConstant.USERNAME_EXIST + "，用户名：" + loginDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());
         }
         if(loginDTO.getPassword()==null){
-            throw new Exception("密码为空");
+            throw new PasswordErrorException(MessageConstant.PASSWORD_EMPTY + "，用户名：" + loginDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());
         }
         User user=User.builder()
                 .loginName(loginDTO.getUsername())
@@ -70,9 +75,7 @@ public class UserServiceImpl  implements UserService {
     @Override
     public User getUserInfo() {
         Long userId= TLUtils.getUserId();
-        User user = userMapper.getById(userId);
-        System.out.println(user);
-        return user;
+        return userMapper.getById(userId);
     }
 
     @Override
@@ -98,7 +101,7 @@ public class UserServiceImpl  implements UserService {
     }
 
     @Override
-    public void setStatus(Byte lockStatus, List<Long> ids) {
+    public void setStatus(Integer lockStatus, List<Long> ids) {
         userMapper.setStatus(lockStatus,ids);
     }
 }

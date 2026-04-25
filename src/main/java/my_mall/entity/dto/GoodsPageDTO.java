@@ -10,6 +10,6 @@ import lombok.*;
 public class GoodsPageDTO {
     private Integer pageNumber;
     private Integer pageSize;
-    private Byte sellStatus;
+    private Integer sellStatus;
     private String goodsName;
 }

@@ -34,6 +34,21 @@
             #{id}
         </foreach>
     </update>
+    <update id="updateBatch">
+        <foreach collection="ordersList" item="order" separator=";">
+            update my_mall.`order`
+            <set>
+                <if test="totalPrice != null">total_price = #{totalPrice},</if>
+                <if test="payStatus != null">pay_status = #{payStatus},</if>
+                <if test="payType != null">pay_type = #{payType},</if>
+                <if test="payTime != null">pay_time = #{payTime},</if>
+                <if test="orderStatus != null">order_status = #{orderStatus},</if>
+                <if test="extraInfo != null">extra_info = #{extraInfo},</if>
+                <if test="updateTime != null">update_time = #{updateTime},</if>
+            </set>
+            where order_no=#{orderNo}
+        </foreach>
+    </update>
     <select id="getByOrderNo" resultType="my_mall.entity.po.Order">
         select * from my_mall.`order`
         where order_no=#{orderNo}
@@ -64,8 +79,13 @@
     <select id="getByIds" resultType="my_mall.entity.po.Order">
         select * from my_mall.`order`
         where id in
-        <foreach collection="list" item="id" open="(" close=")" separator=",">
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
             #{id}
         </foreach>
+    </select>
+    <select id="getByStatusAndTime" resultType="my_mall.entity.po.Order">
+        select * from my_mall.`order`
+        where order_status=#{orderStatus}
+        and create_time&lt;#{localDateTIme}
     </select>
 </mapper>

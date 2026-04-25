@@ -10,5 +10,5 @@ import lombok.*;
 public class UserPageDTO {
     private Integer pageNumber;
     private Integer pageSize;
-    private Byte locked;
+    private Integer locked;
 }

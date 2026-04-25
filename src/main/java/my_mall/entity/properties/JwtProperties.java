@@ -13,7 +13,7 @@ public class JwtProperties {
      * @return
      */
     private String adminSecretKey;
-    private long adminTtl;
+    private Long adminTtl;
     private String adminTokenName;
 
     /**
@@ -21,6 +21,6 @@ public class JwtProperties {
      * @return
      */
     private String userSecretKey;
-    private long userTtl;
+    private Long userTtl;
     private String userTokenName;
 }
