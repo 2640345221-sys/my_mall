@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import my_mall.annotation.OperationLog;
 import my_mall.entity.dto.LoginDTO;
 import my_mall.entity.po.User;
 import my_mall.entity.properties.JwtProperties;
@@ -35,9 +36,10 @@ public class UserController {
     private UserService userService;
 
     @Operation(summary = "用户登录")
+    @OperationLog(module = "用户模块", type = "登录", description = "用户登录",
+            recordParams = true, recordResult = true)
     @PostMapping("/login")
     public Result login(@RequestBody LoginDTO loginDTO){
-        log.info("用户登录:{}",loginDTO);
         User user = userService.login(loginDTO);
         if(user == null){
             return Result.error("账号或密码错误");
@@ -52,38 +54,41 @@ public class UserController {
                 .loginName(user.getLoginName())
                 .token(token)
                 .build();
-        log.info("userLoginVO:{}",userLoginVO);
         return Result.success(userLoginVO);
     }
 
     @Operation(summary = "用户登出")
+    @OperationLog(module = "用户模块", type = "登出", description = "用户登出",
+            recordParams = true, recordResult = true)
     @PostMapping("/logout")
     public Result logout(){
-        log.info("用户退出:{}",TLUtils.getUserId());
         TLUtils.remove();
         return Result.success();
     }
 
     @Operation(summary = "用户注册")
+    @OperationLog(module = "用户模块", type = "注册", description = "用户注册",
+            recordParams = true, recordResult = true)
     @PostMapping("/register")
     public Result userRegister(@RequestBody LoginDTO loginDTO){
-        log.info("有用户开始注册:{}",loginDTO);
         userService.register(loginDTO);
         return Result.success();
     }
 
     @Operation(summary = "获取用户信息")
+    @OperationLog(module = "用户模块", type = "查询", description = "获取用户信息",
+            recordParams = true, recordResult = true)
     @GetMapping("/info")
     public Result getUserInfo(){
-        log.info("开始获取用户信息");
         User user=userService.getUserInfo();
         return Result.success(user);
     }
 
     @Operation(summary = "更新用户信息")
+    @OperationLog(module = "用户模块", type = "更新", description = "更新用户信息",
+            recordParams = true, recordResult = true)
     @PutMapping("/info")
     public Result updateUserInfo(@RequestBody UserVO userVO){
-        log.info("开始更新用户信息{}",userVO);
         userService.updateUserInfo(userVO);
         return Result.success();
     }

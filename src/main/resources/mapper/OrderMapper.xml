@@ -86,6 +86,6 @@
     <select id="getByStatusAndTime" resultType="my_mall.entity.po.Order">
         select * from my_mall.`order`
         where order_status=#{orderStatus}
-        and create_time&lt;#{localDateTIme}
+        and create_time&lt;#{localDateTime}
     </select>
 </mapper>

@@ -1,14 +1,16 @@
 package my_mall.mapper;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
 import com.github.pagehelper.Page;
+
 import my_mall.entity.dto.GoodsPageDTO;
 import my_mall.entity.dto.GoodsPageSearchDTO;
 import my_mall.entity.dto.StockDeductDTO;
 import my_mall.entity.po.Goods;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-
-import java.util.List;
 
 @Mapper
 public interface GoodsMapper {
@@ -34,4 +36,10 @@ public interface GoodsMapper {
     List<Goods> getByIdBatch(List<Long> ids);
 
     void deleteBatch(Long id);
+    
+    @Select("select * from my_mall.goods where sell_status = 1 order by create_time desc limit #{limit}")
+    List<Goods> getLatestGoods(int limit);
+    
+    @Select("select * from my_mall.goods where sell_status = 1 order by stock_num desc limit #{limit}")
+    List<Goods> getHotGoods(int limit);
 }

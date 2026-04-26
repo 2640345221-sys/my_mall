@@ -1,18 +1,21 @@
 package my_mall.controller.common;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
-import my_mall.result.Result;
-import my_mall.utils.OssUtils;
+import java.io.IOException;
+import java.util.UUID;
+
+import my_mall.exception.UploadFileFailedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.UUID;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import my_mall.annotation.OperationLog;
+import my_mall.result.Result;
+import my_mall.utils.OssUtils;
 
 @Tag(name = "通用接口模块")
 @RestController
@@ -23,9 +26,10 @@ public class CommonController {
     private OssUtils aliOssUtil;
 
     @Operation(summary = "文件上传")
+    @OperationLog(module = "通用接口模块", type = "上传", description = "文件上传",
+            recordParams = true, recordResult = true)
     @PostMapping("/upload")
     public Result<String> upload(MultipartFile file){
-        log.info("开始上传文件"+file.getOriginalFilename());
         try {
             String format = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
             UUID uuid = UUID.randomUUID();
@@ -37,10 +41,8 @@ public class CommonController {
             String filePath=aliOssUtil.upload(bytes,fileName);
 
             return Result.success(filePath);
-
         } catch (IOException e) {
-            log.error("上传失败");
+            throw new UploadFileFailedException(e.getMessage());
         }
-        return Result.error("上传失败");
     }
 }

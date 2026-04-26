@@ -5,6 +5,7 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import my_mall.annotation.OperationLog;
 import my_mall.constant.MessageConstant;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,8 +37,9 @@ public class AdminController {
 
     @Operation(summary = "管理员登录")
     @GetMapping("/login")
-    public Result login(LoginDTO loginDTO){
-        log.info("管理员登录:{}",loginDTO);
+    @OperationLog(module="管理员模块",type = "登录" ,description = "管理员尝试登陆",
+    recordParams = true,recordResult = true)
+    public Result<UserLoginVO> login(LoginDTO loginDTO){
         Admin admin = adminService.login(loginDTO);
         if(admin == null){
             return Result.error(MessageConstant.LOGIN_ERROR);
@@ -57,24 +59,27 @@ public class AdminController {
 
     @Operation(summary = "更新管理员信息")
     @PutMapping("/update")
+    @OperationLog(module="管理员模块",type = "更新" ,description = "更新管理员信息",
+            recordParams = true,recordResult = true)
     public Result update(AdminUpdateDTO adminUpdateDTO){
-        log.info("开始更新管理员信息{}",adminUpdateDTO);
         adminService.update(adminUpdateDTO);
         return Result.success();
     }
 
     @Operation(summary = "获取管理员信息")
     @GetMapping("/profile")
+    @OperationLog(module="管理员模块",type = "查询" ,description = "查询当前登陆的管理员信息",
+            recordParams = true,recordResult = true)
     public Result getProfile(){
-        log.info("获取管理员的信息,id{}",TLUtils.getUserId());
         Admin admin=adminService.getProfile();
         return Result.success(admin);
     }
 
     @Operation(summary = "管理员登出")
     @DeleteMapping("/logout")
+    @OperationLog(module="管理员模块",type = "登出" ,description = "管理员退出登录",
+            recordParams = true,recordResult = true)
     public Result logout(){
-        log.info("id为{}的管理员退出登录",TLUtils.getUserId());
         TLUtils.remove();
         return Result.success();
     }

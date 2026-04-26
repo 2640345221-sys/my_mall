@@ -3,7 +3,9 @@ package my_mall.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import my_mall.mapper.UserMapper;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -21,6 +23,8 @@ import my_mall.utils.TLUtils;
 public class AddressServiceImpl implements AddressService {
     @Resource
     private AddressMapper addressMapper;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public void insert(UserAddressDTO userAddressDTO) {

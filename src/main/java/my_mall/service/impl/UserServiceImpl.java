@@ -2,6 +2,7 @@ package my_mall.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.mysql.cj.protocol.MessageSender;
 import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
 import my_mall.constant.MessageConstant;
@@ -35,11 +36,11 @@ public class UserServiceImpl  implements UserService {
         String username = loginDTO.getUsername();
         User user=userMapper.getByUsername(username);
         if(user==null){
-            return null;
+            throw new UserNameNotExistException(MessageConstant.USERNAME_NOT_EXIST);
         }
         String password = loginDTO.getPassword();
         if(!DigestUtils.md5DigestAsHex(password.getBytes()).equals(user.getPassword())){
-            return null;
+            throw new PasswordErrorException(MessageConstant.ADMIN_PASSWORD_ERROR+ "，用户账号：" + loginDTO.getUsername());
         }
         if(user.getLocked()==true){
             throw new UserIsLockedException(MessageConstant.USER_LOCKED + "，用户ID：" + user.getId() + "，操作用户ID：" + TLUtils.getUserId());

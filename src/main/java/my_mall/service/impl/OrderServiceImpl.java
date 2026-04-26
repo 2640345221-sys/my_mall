@@ -327,7 +327,7 @@ public class OrderServiceImpl implements OrderService {
         Long userId = TLUtils.getUserId();
         PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
         Page<Order> page=orderMapper.aGetByUserId(orderPageDTO,userId);
-        List<Long> ids=page.getResult().stream().map(x->x.getId()).collect(Collectors.toList());
+        List<Long> ids=page.getResult().stream().map(Order::getId).collect(Collectors.toList());
         List<OrderItem> list=orderItemMapper.getBatchByOrderId(ids);
         Map<Long, List<OrderItem>> itemMap = list.stream()
                 .collect(Collectors.groupingBy(OrderItem::getOrderId));
