@@ -4,12 +4,12 @@
 <mapper namespace="my_mall.mapper.GoodsMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO my_mall.goods (
-            name, intro, category_id, cover_img, carousel, detail_content,
-            original_price, selling_price, stock_num, tag, sell_status,
+            name, intro, category_id, cover_img,  detail_content,
+            original_price, selling_price, stock_num, sell_status,
             create_user, create_time, update_user, update_time
         ) VALUES (
-                     #{name}, #{intro}, #{categoryId}, #{coverImg}, #{carousel}, #{detailContent},
-                     #{originalPrice}, #{sellingPrice}, #{stockNum}, #{tag}, #{sellStatus},
+                     #{name}, #{intro}, #{categoryId}, #{coverImg}, #{detailContent},
+                     #{originalPrice}, #{sellingPrice}, #{stockNum}, #{sellStatus},
                      #{createUser}, #{createTime}, #{updateUser}, #{updateTime}
                  )
     </insert>
@@ -35,9 +35,6 @@
             </if>
             <if test="coverImg != null">
                 cover_img = #{coverImg},
-            </if>
-            <if test="carousel != null">
-                carousel = #{carousel},
             </if>
             <if test="detailContent != null">
                 detail_content = #{detailContent},

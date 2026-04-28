@@ -1,5 +1,6 @@
 package my_mall.mapper;
 
+import my_mall.annotation.OperationFill;
 import my_mall.entity.po.GoodsCategory;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -11,10 +12,11 @@ public interface CategoryMapper {
     @Select("select * from my_mall.goods_category order by parent_id asc,id asc")
     List<GoodsCategory> getAll();
 
+    @OperationFill(fillUpdateTime = true,fillUpdateUser = true,fillCreateUser = true,fillCreateTime = true)
     void insert(GoodsCategory category);
 
     void deleteBatch(List<Long> ids);
-
+    @OperationFill(fillUpdateTime = true,fillUpdateUser = true)
     void update(GoodsCategory category);
     @Select("select * from my_mall.goods_category where id=#{id}")
     GoodsCategory getById(Long id);

@@ -13,10 +13,11 @@ spring:
     multipart:
       max-file-size: 3MB
       max-request-size: 10MB
-  redis:
-    host: ${kkek.redis.host}
-    port: ${kkek.redis.port}
-    database:  ${kkek.redis.database}
+  data:
+    redis:
+      host: ${kkek.redis.host}
+      port: ${kkek.redis.port}
+      database: ${kkek.redis.database}
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: my_mall.entity

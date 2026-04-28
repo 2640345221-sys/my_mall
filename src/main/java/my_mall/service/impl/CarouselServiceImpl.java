@@ -45,8 +45,6 @@ public class CarouselServiceImpl implements CarouselService {
             throw new CarouselNotExistException(MessageConstant.CAROUSEL_NOT_EXIST + "，轮播图ID：" + carouselUpdateDTO.getId() + "，操作用户ID：" + TLUtils.getUserId());
         }
         BeanUtils.copyProperties(carouselUpdateDTO,carousel);
-        carousel.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
-        carousel.setUpdateTime(LocalDateTime.now());
         carouselMapper.update(carousel);
     }
 
@@ -54,10 +52,6 @@ public class CarouselServiceImpl implements CarouselService {
     public void insert(CarouselDTO carouselDTO) {
         Carousel carousel=new Carousel();
         BeanUtils.copyProperties(carouselDTO,carousel);
-        carousel.setCreateUser(Math.toIntExact(TLUtils.getUserId()));
-        carousel.setCreateTime(LocalDateTime.now());
-        carousel.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
-        carousel.setUpdateTime(LocalDateTime.now());
         carouselMapper.insert(carousel);
     }
 

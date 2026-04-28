@@ -56,4 +56,13 @@
         </foreach>
         and sc.user_id = #{userId}
     </select>
+    <select id="selectTopSellingGoodsIds" resultType="java.lang.Long">
+        SELECT oi.goods_id
+        FROM my_mall.order_item oi
+                 INNER JOIN my_mall.`order` o ON oi.order_id = o.id
+        WHERE o.order_status IN (1,2,3,-1)
+        GROUP BY oi.goods_id
+        ORDER BY SUM(oi.count) DESC
+        LIMIT #{limit}
+    </select>
 </mapper>

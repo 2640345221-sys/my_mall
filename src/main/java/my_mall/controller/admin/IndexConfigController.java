@@ -11,6 +11,8 @@ import my_mall.entity.po.IndexConfig;
 import my_mall.result.PageResult;
 import my_mall.result.Result;
 import my_mall.service.IndexConfigService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,13 +24,13 @@ import java.util.List;
 public class IndexConfigController {
     @Resource
     private IndexConfigService indexConfigService;
-
     @Operation(summary = "分页查询首页配置")
     @GetMapping
     @OperationLog(module = "管理端首页配置模块",type = "查询",description = "查询全部首页配置",
             recordParams = true,recordResult = true)
     public Result<PageResult> indexConfig(IndexPageDTO indexPageDTO) {
         PageResult pageResult=indexConfigService.getPage(indexPageDTO);
+
         return Result.success(pageResult);
     }
 
@@ -47,6 +49,7 @@ public class IndexConfigController {
             recordParams = true,recordResult = true)
     public Result deleteIndexConfigById(@RequestParam List<Long> ids) {
         indexConfigService.delete(ids);
+        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 
@@ -56,6 +59,7 @@ public class IndexConfigController {
             recordParams = true,recordResult = true)
     public Result updateIndexConfig(@RequestBody IndexConfigDTO indexConfigDTO) {
         indexConfigService.update(indexConfigDTO);
+        indexConfigService.resetIndexConfig();
         return  Result.success();
     }
 
@@ -65,6 +69,7 @@ public class IndexConfigController {
             recordParams = true,recordResult = true)
     public Result addIndexConfig(@RequestBody IndexConfigDTO indexConfigDTO) {
         indexConfigService.insert(indexConfigDTO);
+        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 }

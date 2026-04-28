@@ -7,9 +7,9 @@ public enum OrderStatusEnum {
     ORDER_PACKAGED(2,"配货完成"),
     ORDER_EXPRESS(3,"出库成功"),
     ORDER_SUCCESS(4,"交易成功"),
-    ORDER_CLOSE_BY_USER(-1,"手动关闭"),
+    ORDER_CLOSE_CONFIRM(-1,"确认订单关闭"),
     ORDER_CLOSE_BY_EXPIRED(-2,"超时关闭"),
-    ORDER_CLOSE_BY_ADMIN(-3,"商家关闭");
+    ORDER_CLOSE_CANCEL(-3,"取消订单关闭");
 
     private Integer status;
     private String name;

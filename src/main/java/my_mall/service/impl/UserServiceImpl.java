@@ -68,7 +68,6 @@ public class UserServiceImpl  implements UserService {
                 .password(DigestUtils.md5DigestAsHex(loginDTO.getPassword().getBytes()))
                 .locked(false)
                 .introduceSign("")
-                .createTime(LocalDateTime.now())
                 .build();
         userMapper.insert(user);
     }

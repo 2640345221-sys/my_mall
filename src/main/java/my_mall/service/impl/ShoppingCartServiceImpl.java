@@ -51,8 +51,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCart.setUserId(userId);
         shoppingCart.setGoodsId(cartItemDTO.getGoodsId());
         shoppingCart.setGoodsCount(cartItemDTO.getGoodsCount());
-        shoppingCart.setCreateTime(LocalDateTime.now());
-        shoppingCart.setUpdateTime(LocalDateTime.now());
         shoppingCartMapper.insert(shoppingCart);
 
     }
@@ -81,7 +79,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             throw new PowerIsNotEnoughException(MessageConstant.POWER_NOT_ENOUGH + "，购物车项ID：" + shoppingCartDTO.getCartItemId() + "，购物车用户ID：" + cart.getUserId() + "，操作用户ID：" + userId);
         }
         cart.setGoodsCount(shoppingCartDTO.getGoodsCount());
-        cart.setUpdateTime(LocalDateTime.now());
         shoppingCartMapper.update(cart);
     }
 

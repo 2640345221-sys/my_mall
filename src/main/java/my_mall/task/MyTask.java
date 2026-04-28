@@ -3,16 +3,14 @@ package my_mall.task;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import my_mall.service.IndexConfigService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import my_mall.entity.po.Goods;
-import my_mall.entity.po.IndexConfig;
 import my_mall.entity.po.Order;
-import my_mall.enums.IndexConfigTypeEnum;
 import my_mall.enums.OrderStatusEnum;
 import my_mall.exception.AutoConfirmException;
 import my_mall.exception.TimeOutOrderException;
@@ -29,6 +27,8 @@ public class MyTask {
     private GoodsMapper goodsMapper;
     @Resource
     private IndexConfigMapper indexConfigMapper;
+    @Resource
+    private IndexConfigService indexConfigService;
 
     @Scheduled(cron = "0 * * * * ?")
     @Transactional
@@ -39,7 +39,7 @@ public class MyTask {
 
             ordersList.stream().forEach(order -> {
                 order.setUpdateTime(LocalDateTime.now());
-                order.setOrderStatus(OrderStatusEnum.ORDER_CLOSE_BY_USER.getStatus());
+                order.setOrderStatus(OrderStatusEnum.ORDER_CLOSE_CONFIRM.getStatus());
             });
 
             if(!ordersList.isEmpty()) {
@@ -72,96 +72,12 @@ public class MyTask {
         }
     }
 
-    /**
-     * 每天凌晨0点重新设置最新商品
-     * 删除现有最新商品配置，根据商品创建时间获取最新的10个商品
-     */
-    @Scheduled(cron = "0 0 0 * * ?")
-    @Transactional
-    public void resetLatestGoods() {
-        try {
-            log.info("开始重新设置最新商品");
-            
-            // 1. 删除现有的最新商品配置
-            indexConfigMapper.deleteByType(IndexConfigTypeEnum.NEW_GOODS.getValue());
-            
-            // 2. 获取最新的10个商品（按创建时间倒序）
-            List<Goods> latestGoods = goodsMapper.getLatestGoods(10);
-            
-            if (latestGoods.isEmpty()) {
-                log.info("没有找到可用的最新商品");
-                return;
-            }
-            
-            // 3. 创建新的最新商品配置
-            List<IndexConfig> newConfigs = latestGoods.stream()
-                .map(goods -> IndexConfig.builder()
-                    .name(goods.getName())
-                    .type(IndexConfigTypeEnum.NEW_GOODS.getValue())
-                    .goodsId(goods.getId())
-                    .redirectUrl("/goods/detail/" + goods.getId())
-                    .rank(0) // 可以根据需要设置排序
-                    .createTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
-                    .createUser(0) // 系统操作
-                    .updateUser(0) // 系统操作
-                    .build())
-                .collect(java.util.stream.Collectors.toList());
-            
-            // 4. 批量插入新的配置
-            indexConfigMapper.insertBatch(newConfigs);
-            
-            log.info("成功设置 {} 个最新商品", latestGoods.size());
-        } catch (Exception e) {
-            log.error("重新设置最新商品失败", e);
-            throw new RuntimeException("重新设置最新商品失败: " + e.getMessage());
-        }
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void resetIndexConfigTask() {
+        log.info("开始执行首页配置重置任务");
+        indexConfigService.resetIndexConfig();
+        log.info("首页配置重置任务完成");
     }
 
-    /**
-     * 每天凌晨0点重新设置热销商品
-     * 删除现有热销商品配置，根据库存量获取最畅销的10个商品
-     */
-    @Scheduled(cron = "0 0 0 * * ?")
-    @Transactional
-    public void resetHotGoods() {
-        try {
-            log.info("开始重新设置热销商品");
-            
-            // 1. 删除现有的热销商品配置
-            indexConfigMapper.deleteByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
-            
-            // 2. 获取最畅销的10个商品（按库存量倒序，库存量越大认为越畅销）
-            List<Goods> hotGoods = goodsMapper.getHotGoods(10);
-            
-            if (hotGoods.isEmpty()) {
-                log.info("没有找到可用的热销商品");
-                return;
-            }
-            
-            // 3. 创建新的热销商品配置
-            List<IndexConfig> hotConfigs = hotGoods.stream()
-                .map(goods -> IndexConfig.builder()
-                    .name(goods.getName())
-                    .type(IndexConfigTypeEnum.POPULAR_GOODS.getValue())
-                    .goodsId(goods.getId())
-                    .redirectUrl("/goods/detail/" + goods.getId())
-                    .rank(goods.getStockNum()) // 使用库存量作为排序依据
-                    .createTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
-                    .createUser(0) // 系统操作
-                    .updateUser(0) // 系统操作
-                    .build())
-                .collect(java.util.stream.Collectors.toList());
-            
-            // 4. 批量插入新的配置
-            indexConfigMapper.insertBatch(hotConfigs);
-            
-            log.info("成功设置 {} 个热销商品", hotGoods.size());
-        } catch (Exception e) {
-            log.error("重新设置热销商品失败", e);
-            throw new RuntimeException("重新设置热销商品失败: " + e.getMessage());
-        }
-    }
 
 }

@@ -1,10 +1,13 @@
 package my_mall.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import my_mall.service.CommonService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import com.github.pagehelper.Page;
@@ -31,6 +34,8 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     private IndexConfigMapper indexConfigMapper;
     @Resource
     private GoodsMapper goodsMapper;
+    @Resource
+    private CommonService commonService;
     @Override
     public PageResult getPage(IndexPageDTO indexPageDTO) {
         PageResult pageResult = new PageResult();
@@ -64,8 +69,6 @@ public class IndexConfigServiceImpl implements IndexConfigService {
             throw new IndexConfigNotExistException(MessageConstant.INDEX_CONFIG_NOT_EXIST + "，配置ID：" + indexConfigDTO.getId() + "，操作用户ID：" + TLUtils.getUserId());
         }
         BeanUtils.copyProperties(indexConfigDTO,indexConfig);
-        indexConfig.setUpdateTime(LocalDateTime.now());
-        indexConfig.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
         indexConfigMapper.update(indexConfig);
     }
 
@@ -73,10 +76,6 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     public void insert(IndexConfigDTO indexConfigDTO) {
         IndexConfig indexConfig=new IndexConfig();
         BeanUtils.copyProperties(indexConfigDTO,indexConfig);
-        indexConfig.setCreateTime(LocalDateTime.now());
-        indexConfig.setCreateUser(Math.toIntExact(TLUtils.getUserId()));
-        indexConfig.setUpdateTime(LocalDateTime.now());
-        indexConfig.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
         indexConfigMapper.insert(indexConfig);
     }
 
@@ -91,7 +90,10 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     public List<Goods> getPopularGoods() {
         List<IndexConfig> list=indexConfigMapper.getByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
         List<Long> ids=list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
-        return goodsMapper.getByIdBatch(ids);
+        if(ids!=null&&ids.size()>0){
+            return goodsMapper.getByIdBatch(ids);
+        }
+        return new ArrayList<Goods>();
     }
 
     @Override
@@ -100,5 +102,13 @@ public class IndexConfigServiceImpl implements IndexConfigService {
         List<Long> ids=list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
         List<Goods> goods=goodsMapper.getByIdBatch(ids);
         return goods;
+    }
+
+    @CacheEvict(allEntries = true,value={"recommendCache","popularCache","newCache"})
+    @Override
+    public void resetIndexConfig() {
+        commonService.resetRecommendGoods();
+        commonService.resetNewGoods();
+        commonService.resetPopularGoods();
     }
 }

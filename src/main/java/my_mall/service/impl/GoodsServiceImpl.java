@@ -62,7 +62,6 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     @Transactional
     public void insert(Goods goods) {
-        Long userId = TLUtils.getUserId();
         GoodsCategory category = categoryMapper.getById(goods.getCategoryId());
         if (category == null || category.getLevel() != 3) {
             throw new RuntimeException(MessageConstant.CATEGORY_LEVEL_ERROR);
@@ -72,10 +71,6 @@ public class GoodsServiceImpl implements GoodsService {
         if (exist != null) {
             throw new RuntimeException(MessageConstant.GOODS_NAME_EXIST);
         }
-        goods.setCreateTime(LocalDateTime.now());
-        goods.setUpdateTime(LocalDateTime.now());
-        goods.setCreateUser(Math.toIntExact(TLUtils.getUserId()));
-        goods.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
         goodsMapper.insert(goods);
     }
 
@@ -106,7 +101,7 @@ public class GoodsServiceImpl implements GoodsService {
         pageResult.setRecords(goodsDetailVOList);
         return pageResult;
     }
-
+    //TODO这里需要修改，因为没有修改数据库的updateUser和updateTime
     @Override
     public void updateStatus(Integer sellStatus, List<Long> ids) {
         goodsMapper.updateStatus(sellStatus,ids);
@@ -119,8 +114,6 @@ public class GoodsServiceImpl implements GoodsService {
         if(goodsNew==null){
             throw new GoodsNotExistException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + goods.getId() + "，操作用户ID：" + TLUtils.getUserId());
         }
-        goods.setUpdateTime(LocalDateTime.now());
-        goods.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
         goodsMapper.updateGoods(goods);
     }
 

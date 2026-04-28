@@ -1,6 +1,7 @@
 package my_mall.mapper;
 
 import com.github.pagehelper.Page;
+import my_mall.annotation.OperationFill;
 import my_mall.entity.dto.OrderPageDTO;
 import my_mall.entity.po.Order;
 import org.apache.ibatis.annotations.Mapper;
@@ -10,8 +11,9 @@ import java.util.List;
 
 @Mapper
 public interface OrderMapper {
+    @OperationFill(fillCreateTime = true,fillUpdateTime = true)
     void insert(Order order);
-
+    @OperationFill(fillUpdateTime = true)
     void update(Order order);
 
     Order getByOrderNo(String orderNo);

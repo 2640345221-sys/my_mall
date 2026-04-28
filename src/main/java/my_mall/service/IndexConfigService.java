@@ -24,4 +24,6 @@ public interface IndexConfigService {
     List<Goods> getPopularGoods();
 
     List<Goods> getRecommendGoods();
+
+    void resetIndexConfig();
 }

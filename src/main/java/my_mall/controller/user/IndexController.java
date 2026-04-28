@@ -2,6 +2,7 @@ package my_mall.controller.user;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +33,7 @@ public class IndexController {
     @Operation(summary = "获取新品商品")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取新品商品",
             recordParams = true, recordResult = true)
+    @Cacheable(cacheNames = "newCache")
     public Result<List<Goods>> getNewGoods() {
         List<Goods> list=indexConfigService.getNewGoods();
         return Result.success(list);
@@ -41,6 +43,7 @@ public class IndexController {
     @Operation(summary = "获取热门商品")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取热门商品",
             recordParams = true, recordResult = true)
+    @Cacheable(cacheNames = "popularCache")
     public Result<List<Goods>> getPopularGoods() {
         List<Goods> list=indexConfigService.getPopularGoods();
         return Result.success(list);
@@ -50,17 +53,19 @@ public class IndexController {
     @Operation(summary = "获取推荐商品")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取推荐商品",
             recordParams = true, recordResult = true)
+    @Cacheable(cacheNames = "recommendCache")
     public Result<List<Goods>> getRecommendGoods() {
         List<Goods> list=indexConfigService.getRecommendGoods();
         return Result.success(list);
     }
 
-    @GetMapping("/carousel")
+/*    @GetMapping("/carousel")
     @Operation(summary = "获取轮播图")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取轮播图",
             recordParams = true, recordResult = true)
+    @Cacheable(cacheNames = "indexCarousel")
     public Result<List<Carousel>> getCarousel() {
         List<Carousel> list=carouselService.getList();
         return Result.success(list);
-    }
+    }*/
 }

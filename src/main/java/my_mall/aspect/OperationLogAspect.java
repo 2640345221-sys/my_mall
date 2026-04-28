@@ -1,4 +1,4 @@
-package my_mall.aop;
+package my_mall.aspect;
 
 import lombok.extern.slf4j.Slf4j;
 import my_mall.annotation.OperationLog;

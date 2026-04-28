@@ -1,6 +1,7 @@
 package my_mall.mapper;
 
 import com.github.pagehelper.Page;
+import my_mall.annotation.OperationFill;
 import my_mall.entity.dto.UserPageDTO;
 import my_mall.entity.po.User;
 import my_mall.entity.po.UserAddress;
@@ -17,7 +18,7 @@ public interface UserMapper {
     
     @Select("select * from my_mall.user where nick_name=#{nickname}")
     User getByNickName(String nickName);
-
+    @OperationFill(fillCreateTime = true)
     void insert(User user);
 
     @Select("select * from my_mall.user where id=#{userId}")

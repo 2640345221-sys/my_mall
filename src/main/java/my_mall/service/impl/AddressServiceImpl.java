@@ -23,16 +23,12 @@ import my_mall.utils.TLUtils;
 public class AddressServiceImpl implements AddressService {
     @Resource
     private AddressMapper addressMapper;
-    @Autowired
-    private UserMapper userMapper;
 
     @Override
     public void insert(UserAddressDTO userAddressDTO) {
         UserAddress userAddress = new UserAddress();
         BeanUtils.copyProperties(userAddressDTO,userAddress);
         userAddress.setUserId(TLUtils.getUserId());
-        userAddress.setCreateTime(LocalDateTime.now());
-        userAddress.setUpdateTime(LocalDateTime.now());
         addressMapper.insert(userAddress);
     }
 
@@ -83,6 +79,7 @@ public class AddressServiceImpl implements AddressService {
             throw new AddressNotBelongException(MessageConstant.ADDRESS_NOT_BELONG + "，地址ID：" + userAddressDTO.getId() + "，地址用户ID：" + address.getUserId() + "，操作用户ID：" + userId);
         }
         BeanUtils.copyProperties(userAddressDTO,address);
+        address.setUpdateTime(LocalDateTime.now());
         addressMapper.update(address);
     }
 

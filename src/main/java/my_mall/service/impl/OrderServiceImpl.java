@@ -107,8 +107,6 @@ public class OrderServiceImpl implements OrderService {
         //从上述数据总结出order
         Order order =new Order();
         order.setUserId(userId);
-        order.setCreateTime(LocalDateTime.now());
-        order.setUpdateTime(LocalDateTime.now());
         order.setTotalPrice(totalPrice);
         order.setPayStatus(OrderPayStatusEnum.NO_PAY.getValue());
         order.setOrderStatus(OrderStatusEnum.ORDER_PRE_PAY.getStatus());
@@ -157,10 +155,9 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
         goodsMapper.recoverStock(stockRecoverList);
 
-        order.setOrderStatus(OrderStatusEnum.ORDER_CLOSE_BY_USER.getStatus());
+        order.setOrderStatus(OrderStatusEnum.ORDER_CLOSE_CONFIRM.getStatus());
         order.setOrderNo(orderNo);
         order.setExtraInfo("用户取消订单");
-        order.setUpdateTime(LocalDateTime.now());
         orderMapper.update(order);
     }
 
@@ -181,7 +178,6 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setOrderStatus((OrderStatusEnum.ORDER_SUCCESS.getStatus()));
         order.setOrderNo(orderNo);
-        order.setUpdateTime(LocalDateTime.now());
         orderMapper.update(order);
     }
 
@@ -256,7 +252,6 @@ public class OrderServiceImpl implements OrderService {
         order.setPayType(orderPayDTO.getPayType());
         order.setOrderStatus(OrderStatusEnum.ORDER_PAID.getStatus());
         order.setPayTime(LocalDateTime.now());
-        order.setUpdateTime(LocalDateTime.now());
         orderMapper.update(order);
     }
 
@@ -319,7 +314,7 @@ public class OrderServiceImpl implements OrderService {
             goodsMapper.recoverStock(stockRecoverList);
         }
 
-        orderMapper.setStatus(orderIds, OrderStatusEnum.ORDER_CLOSE_BY_ADMIN.getStatus(), LocalDateTime.now());
+        orderMapper.setStatus(orderIds, OrderStatusEnum.ORDER_CLOSE_CANCEL.getStatus(), LocalDateTime.now());
     }
 
     @Override

@@ -67,10 +67,6 @@ public class CategoryServiceImpl implements CategoryService {
     public void insert(CategoryDTO categoryInsertDTO) {
         GoodsCategory category = new GoodsCategory();
         BeanUtils.copyProperties(categoryInsertDTO, category);
-        category.setCreateTime(LocalDateTime.now());
-        category.setUpdateTime(LocalDateTime.now());
-        category.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
-        category.setCreateUser(Math.toIntExact(TLUtils.getUserId()));
         categoryMapper.insert(category);
     }
 
@@ -87,8 +83,6 @@ public class CategoryServiceImpl implements CategoryService {
             throw new CategoryNotExistException(MessageConstant.CATEGORY_NOT_EXIST + "，分类ID：" + categoryDTO.getId() + "，操作用户ID：" + TLUtils.getUserId());
         }
         BeanUtils.copyProperties(categoryDTO, category);
-        category.setUpdateTime(LocalDateTime.now());
-        category.setUpdateUser(Math.toIntExact(TLUtils.getUserId()));
         categoryMapper.update(category);
     }
 
