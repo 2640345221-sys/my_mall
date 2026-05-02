@@ -31,7 +31,9 @@ public class CategoryServiceImpl implements CategoryService {
         for (GoodsCategory c : gList) {
             IndexCategoryVO vo = new IndexCategoryVO();
             vo.setId(c.getId());
+            vo.setLevel(c.getLevel());
             vo.setName(c.getName());
+            vo.setParentId(c.getParentId());
             vo.setChildren(new ArrayList<>());
             voMap.put(c.getId(), vo);
         }

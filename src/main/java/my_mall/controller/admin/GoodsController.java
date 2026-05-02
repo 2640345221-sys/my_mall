@@ -53,7 +53,7 @@ public class GoodsController {
     @GetMapping("/page")
     @OperationLog(module = "管理端商品模块",type = "查询",description = "分页查询商品",
             recordParams = true,recordResult = true)
-    public Result<PageResult> page(GoodsPageDTO goodsPageDTO){
+    public Result<PageResult> page(@RequestParam GoodsPageDTO goodsPageDTO){
         PageResult pageResult=goodsService.page(goodsPageDTO);
         return Result.success(pageResult);
     }

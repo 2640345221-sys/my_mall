@@ -1,5 +1,6 @@
 package my_mall.entity.po;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class UserAddress {
     private Long userId;
     private  String username;
     private  String userPhone;
+    @JsonProperty("isDefault")
     private    Boolean isDefault;
     private   String province;
     private   String city;

@@ -75,7 +75,8 @@ public class UserServiceImpl  implements UserService {
     @Override
     public User getUserInfo() {
         Long userId= TLUtils.getUserId();
-        return userMapper.getById(userId);
+        User user=userMapper.getById(userId);
+        return user;
     }
 
     @Override

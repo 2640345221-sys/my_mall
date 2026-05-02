@@ -1,7 +1,15 @@
 package my_mall.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+
 import jakarta.annotation.Resource;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.GoodsPageDTO;
@@ -15,13 +23,6 @@ import my_mall.mapper.GoodsMapper;
 import my_mall.result.PageResult;
 import my_mall.service.GoodsService;
 import my_mall.utils.TLUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class GoodsServiceImpl implements GoodsService {
@@ -42,6 +43,13 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public PageResult search(GoodsPageSearchDTO goodsPageSearchDTO) {
+        if (goodsPageSearchDTO.getPageNumber() == null) {
+            goodsPageSearchDTO.setPageNumber(1);
+        }
+        if (goodsPageSearchDTO.getPageSize() == null) {
+            goodsPageSearchDTO.setPageSize(10);
+        }
+        
         PageHelper.startPage(goodsPageSearchDTO.getPageNumber(), goodsPageSearchDTO.getPageSize());
         Page<Goods> goods=goodsMapper.getPage(goodsPageSearchDTO);
         PageResult pageResult=new PageResult();

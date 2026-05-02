@@ -50,7 +50,7 @@ public class OrderController {
     @OperationLog(module = "管理端订单模块", type = "更新", description = "确认收货",
             recordParams = true, recordResult = true)
     @PutMapping("/checkDone")
-    public Result checkDone(@RequestParam List<Long> ids) {
+    public Result checkDone(List<Long> ids) {
         orderService.checkDone(ids);
         return Result.success();
     }
@@ -59,7 +59,7 @@ public class OrderController {
     @OperationLog(module = "管理端订单模块", type = "更新", description = "订单出库",
             recordParams = true, recordResult = true)
     @PutMapping("/checkOut")
-    public Result checkOut(@RequestParam List<Long> ids) {
+    public Result checkOut(List<Long> ids) {
         orderService.checkOut(ids);
         return Result.success();
     }
@@ -68,7 +68,7 @@ public class OrderController {
     @OperationLog(module = "管理端订单模块", type = "更新", description = "关闭订单",
             recordParams = true, recordResult = true)
     @PutMapping("/close")
-    public Result close(@RequestParam List<Long> ids) {
+    public Result close(List<Long> ids) {
         orderService.closeOrder(ids);
         return Result.success();
     }

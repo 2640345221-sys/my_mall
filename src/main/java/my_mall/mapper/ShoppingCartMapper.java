@@ -2,24 +2,24 @@ package my_mall.mapper;
 
 import java.util.List;
 
-import my_mall.annotation.OperationFill;
+import my_mall.controller.user.ShoppingCartController;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import com.github.pagehelper.Page;
 
+import my_mall.annotation.OperationFill;
 import my_mall.entity.dto.OrderCartDTO;
 import my_mall.entity.dto.ShoppingCartPageDTO;
 import my_mall.entity.po.ShoppingCart;
 import my_mall.entity.vo.ShoppingCartItemVO;
-import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface ShoppingCartMapper {
     @OperationFill(fillCreateTime = true,fillUpdateTime = true)
     void insert(ShoppingCart shoppingCart);
 
-    Page<ShoppingCart> page(ShoppingCartPageDTO pageDTO,Long userId);
+    Page<ShoppingCartItemVO> page(ShoppingCartPageDTO pageDTO, Long userId);
     @OperationFill(fillUpdateTime = true)
     void update(ShoppingCart shoppingCart);
 

@@ -60,7 +60,7 @@
             <if test="orderPageDTO.orderStatus!=null">
                and order_status=#{orderPageDTO.orderStatus}
             </if>
-            <if test="orderPageDTO.orderNo!=null">
+            <if test="orderPageDTO.orderNo!=null and orderPageDTO.orderNo!=''">
                 and order_no=#{orderPageDTO.orderNo}
             </if>
         </where>

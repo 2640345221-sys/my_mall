@@ -48,9 +48,6 @@
             <if test="stockNum != null">
                 stock_num = #{stockNum},
             </if>
-            <if test="tag != null">
-                tag = #{tag},
-            </if>
             <if test="sellStatus != null">
                 sell_status = #{sellStatus},
             </if>

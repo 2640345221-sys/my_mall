@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 public class IndexCategoryVO {
     private Long id;
-    private String level;
+    private Integer level;
     private String name;
     private Long parentId;
     private List<IndexCategoryVO> children;

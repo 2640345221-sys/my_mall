@@ -30,7 +30,7 @@ public class MyTask {
     @Resource
     private IndexConfigService indexConfigService;
 
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 30 * * * ?")
     @Transactional
     public void processTimeoutOrder(){
         try {

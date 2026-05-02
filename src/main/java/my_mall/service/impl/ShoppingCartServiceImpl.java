@@ -1,9 +1,9 @@
 package my_mall.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -27,7 +27,6 @@ import my_mall.mapper.ShoppingCartMapper;
 import my_mall.result.PageResult;
 import my_mall.service.ShoppingCartService;
 import my_mall.utils.TLUtils;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ShoppingCartServiceImpl implements ShoppingCartService {
@@ -43,7 +42,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         if(goods==null){
             throw new GoodsNotExistException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + cartItemDTO.getGoodsId() + "，操作用户ID：" + userId);
         }
-        if(!goods.getSellStatus()){
+        if(goods.getSellStatus()){
             throw new GoodsIsNotSellingException(MessageConstant.GOODS_NOT_SELLING + "，商品ID：" + cartItemDTO.getGoodsId() + "，商品名称：" + goods.getName() + "，操作用户ID：" + userId);
         }
 
@@ -59,7 +58,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public PageResult getPage(ShoppingCartPageDTO pageDTO) {
         PageHelper.startPage(pageDTO.getPageNumber(), pageDTO.getPageSize());
         Long userId= TLUtils.getUserId();
-        Page<ShoppingCart> page=shoppingCartMapper.page(pageDTO,userId);
+
+        Page<ShoppingCartItemVO> page=shoppingCartMapper.page(pageDTO,userId);
         PageResult pageResult=new PageResult();
         pageResult.setTotal(page.getTotal());
         pageResult.setTotalPage(page.getPages());

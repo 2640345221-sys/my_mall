@@ -1,13 +1,12 @@
 package my_mall.service;
 
-import my_mall.entity.dto.UserAddressDTO;
 import my_mall.entity.po.UserAddress;
 
 import java.util.List;
 
 public interface AddressService {
 
-    void insert(UserAddressDTO userAddressDTO);
+    void insert(UserAddress userAddressDTO);
 
     UserAddress getDefaultAddress();
 
@@ -15,7 +14,7 @@ public interface AddressService {
 
     void delete(Long addressId);
 
-    void update(UserAddressDTO userAddressUDTO);
+    void update(UserAddress userAddressUDTO);
 
     List<UserAddress> getAllAddress();
 }

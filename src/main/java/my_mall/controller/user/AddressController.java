@@ -33,8 +33,8 @@ public class AddressController {
     @OperationLog(module = "用户地址模块", type = "新增", description = "添加地址",
             recordParams = true, recordResult = true)
     @PostMapping
-    public Result addAddress(@RequestBody UserAddressDTO userAddressDTO) {
-        addressService.insert(userAddressDTO);
+    public Result addAddress(@RequestBody UserAddress userAddress) {
+        addressService.insert(userAddress);
         return Result.success();
     }
 
@@ -69,8 +69,8 @@ public class AddressController {
     @OperationLog(module = "用户地址模块", type = "更新", description = "更新地址",
             recordParams = true, recordResult = true)
     @PutMapping
-    public Result updateAddress(@RequestBody UserAddressDTO userAddressDTO){
-        addressService.update(userAddressDTO);
+    public Result updateAddress(@RequestBody UserAddress userAddress){
+        addressService.update(userAddress);
         return Result.success();
     }
 

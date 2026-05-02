@@ -3,15 +3,12 @@ package my_mall.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import my_mall.mapper.UserMapper;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
 import my_mall.constant.MessageConstant;
-import my_mall.entity.dto.UserAddressDTO;
 import my_mall.entity.po.UserAddress;
 import my_mall.exception.AddressNotBelongException;
 import my_mall.exception.AddressNotExistException;
@@ -25,9 +22,7 @@ public class AddressServiceImpl implements AddressService {
     private AddressMapper addressMapper;
 
     @Override
-    public void insert(UserAddressDTO userAddressDTO) {
-        UserAddress userAddress = new UserAddress();
-        BeanUtils.copyProperties(userAddressDTO,userAddress);
+    public void insert(UserAddress userAddress) {
         userAddress.setUserId(TLUtils.getUserId());
         addressMapper.insert(userAddress);
     }
@@ -69,17 +64,16 @@ public class AddressServiceImpl implements AddressService {
 
     @SneakyThrows
     @Override
-    public void update(UserAddressDTO userAddressDTO) {
+    public void update(UserAddress userAddress) {
         Long userId = TLUtils.getUserId();
-        UserAddress address = addressMapper.getAddressById(userAddressDTO.getId());
+        UserAddress address = addressMapper.getAddressById(userAddress.getId());
         if(address==null){
-            throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST + "，地址ID：" + userAddressDTO.getId() + "，操作用户ID：" + userId);
+            throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST + "，地址ID：" + userAddress.getId() + "，操作用户ID：" + userId);
         }
         if(address.getUserId()!=userId){
-            throw new AddressNotBelongException(MessageConstant.ADDRESS_NOT_BELONG + "，地址ID：" + userAddressDTO.getId() + "，地址用户ID：" + address.getUserId() + "，操作用户ID：" + userId);
+            throw new AddressNotBelongException(MessageConstant.ADDRESS_NOT_BELONG + "，地址ID：" + userAddress.getId() + "，地址用户ID：" + address.getUserId() + "，操作用户ID：" + userId);
         }
-        BeanUtils.copyProperties(userAddressDTO,address);
-        address.setUpdateTime(LocalDateTime.now());
+        BeanUtils.copyProperties(userAddress,address);
         addressMapper.update(address);
     }
 

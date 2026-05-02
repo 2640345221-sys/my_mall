@@ -10,7 +10,7 @@ import java.util.List;
 
 @Mapper
 public interface AddressMapper {
-    @OperationFill(fillCreateTime = true)
+    @OperationFill(fillCreateTime = true,fillUpdateTime = true)
     void insert(UserAddress userAddress);
 
     @Select("select * from my_mall.user_address where user_id=#{userId} and is_default=1")

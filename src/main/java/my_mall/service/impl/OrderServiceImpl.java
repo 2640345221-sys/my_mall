@@ -91,7 +91,7 @@ public class OrderServiceImpl implements OrderService {
             if(goods==null){
                 throw new GoodsNotExistException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + cartItem.getGoodsId() + "，操作用户ID：" + userId);
             }
-            if(!goods.getSellStatus()){
+            if(goods.getSellStatus()){
                 throw new GoodsIsNotSellingException(MessageConstant.GOODS_NOT_SELLING + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，操作用户ID：" + userId);
             }
             if(cartItem.getCount()>goods.getStockNum()){
@@ -127,7 +127,6 @@ public class OrderServiceImpl implements OrderService {
         OrderAddress orderAddress=new OrderAddress();
         BeanUtils.copyProperties(userAddress,orderAddress);
         orderAddress.setOrderId(order.getId());
-        orderAddress.setId(null);
         orderAddressMapper.insert(orderAddress);
 
         shoppingCartMapper.deleteBatch(cartItemIds, userId);

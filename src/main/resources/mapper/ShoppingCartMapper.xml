@@ -31,9 +31,17 @@
         </foreach>
         AND user_id = #{userId}
     </delete>
-    <select id="page" resultType="my_mall.entity.po.ShoppingCart">
-        select * from my_mall.shopping_cart
-        where user_id=#{userId}
+    <select id="page" resultType="my_mall.entity.vo.ShoppingCartItemVO">
+        select
+            sc.id as cartItemId,
+            sc.goods_count as goodsCount,
+            g.cover_img as coverImg,
+            sc.goods_id as goodsId,
+            g.name as goodsName,
+            g.selling_price as sellingPrice
+        from my_mall.shopping_cart as sc
+                 left join my_mall.goods as g on sc.goods_id = g.id
+        where sc.user_id = #{userId}
     </select>
     <select id="getCartItem" resultType="my_mall.entity.vo.ShoppingCartItemVO">
         select sc.id as cartitemId,sc.goods_count,g.cover_img,sc.goods_id, g.name as goodsName,g.selling_price
