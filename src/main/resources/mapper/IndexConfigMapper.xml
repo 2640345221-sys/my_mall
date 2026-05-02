@@ -4,21 +4,21 @@
 <mapper namespace="my_mall.mapper.IndexConfigMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into my_mall.index_config (
-            name, type, goods_id, redirect_url, `rank`,
+            name, type, goods_id, `rank`,
             create_time, create_user, update_time, update_user
         ) values (
-                     #{name}, #{type}, #{goodsId}, #{redirectUrl}, #{rank},
+                     #{name}, #{type}, #{goodsId}, #{rank},
                      #{createTime}, #{createUser}, #{updateTime}, #{updateUser}
                  )
     </insert>
     <insert id="insertBatch" parameterType="list" useGeneratedKeys="true" keyProperty="id">
         insert into my_mall.index_config (
-        name, type, goods_id, redirect_url, `rank`,
+        name, type, goods_id, `rank`,
         create_time, create_user, update_time, update_user
         ) values
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.name}, #{item.type}, #{item.goodsId}, #{item.redirectUrl}, #{item.rank},
+            #{item.name}, #{item.type}, #{item.goodsId}, #{item.rank},
             #{item.createTime}, #{item.createUser}, #{item.updateTime}, #{item.updateUser}
             )
         </foreach>

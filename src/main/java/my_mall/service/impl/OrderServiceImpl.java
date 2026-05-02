@@ -318,9 +318,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public PageResult aGetPage(OrderPageDTO orderPageDTO) {
-        Long userId = TLUtils.getUserId();
         PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
-        Page<Order> page=orderMapper.aGetByUserId(orderPageDTO,userId);
+        Page<Order> page=orderMapper.aGetByUserId(orderPageDTO);
         List<Long> ids=page.getResult().stream().map(Order::getId).collect(Collectors.toList());
         List<OrderItem> list=orderItemMapper.getBatchByOrderId(ids);
         Map<Long, List<OrderItem>> itemMap = list.stream()
@@ -345,6 +344,24 @@ public class OrderServiceImpl implements OrderService {
         pageResult.setTotalPage(page.getPages());
         pageResult.setRecords(detailVOList);
         return pageResult;
+    }
+
+    @Override
+    public OrderDetailVO aGetOrderDetail(String orderNo) {
+        Order order=orderMapper.getByOrderNo(orderNo);
+        if (order == null) {
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单号：" + orderNo);
+        }
+        List<OrderItem> itemList=orderItemMapper.getByOrderId(order.getId());
+        List<OrderCartDTO> list=itemList.stream().map(x->{
+            OrderCartDTO cartItemDTO=new OrderCartDTO();
+            BeanUtils.copyProperties(x,cartItemDTO);
+            return cartItemDTO;
+        }).collect(Collectors.toList());
+        OrderDetailVO orderDetailVO=new OrderDetailVO();
+        BeanUtils.copyProperties(order,orderDetailVO);
+        orderDetailVO.setOrderCartDTO(list);
+        return  orderDetailVO;
     }
 
     /**

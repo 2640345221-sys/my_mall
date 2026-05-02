@@ -28,4 +28,6 @@ public interface OrderService {
     void checkOut(List<Long> orderIds);
 
     void closeOrder(List<Long> orderIds);
+
+    OrderDetailVO aGetOrderDetail(String orderNo);
 }

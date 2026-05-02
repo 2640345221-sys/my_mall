@@ -22,7 +22,7 @@ public interface OrderMapper {
 
     void setStatus(List<Long> ids, Integer b, LocalDateTime now);
 
-    Page<Order> aGetByUserId(OrderPageDTO orderPageDTO, Long userId);
+    Page<Order> aGetByUserId(OrderPageDTO orderPageDTO);
 
     List<Order> getByIds(List<Long> ids);
 

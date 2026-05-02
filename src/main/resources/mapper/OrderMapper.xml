@@ -38,13 +38,13 @@
         <foreach collection="ordersList" item="order" separator=";">
             update my_mall.`order`
             <set>
-                <if test="totalPrice != null">total_price = #{totalPrice},</if>
-                <if test="payStatus != null">pay_status = #{payStatus},</if>
-                <if test="payType != null">pay_type = #{payType},</if>
-                <if test="payTime != null">pay_time = #{payTime},</if>
-                <if test="orderStatus != null">order_status = #{orderStatus},</if>
-                <if test="extraInfo != null">extra_info = #{extraInfo},</if>
-                <if test="updateTime != null">update_time = #{updateTime},</if>
+                <if test="order.totalPrice != null">total_price = #{totalPrice},</if>
+                <if test="order.payStatus != null">pay_status = #{payStatus},</if>
+                <if test="order.payType != null">pay_type = #{payType},</if>
+                <if test="order.payTime != null">pay_time = #{payTime},</if>
+                <if test="order.orderStatus != null">order_status = #{orderStatus},</if>
+                <if test="order.extraInfo != null">extra_info = #{extraInfo},</if>
+                <if test="order.updateTime != null">update_time = #{updateTime},</if>
             </set>
             where order_no=#{orderNo}
         </foreach>
@@ -68,11 +68,11 @@
     <select id="aGetByUserId" resultType="my_mall.entity.po.Order">
         select * from my_mall.`order`
         <where>
-            <if test="orderPageDTO.orderStatus!=null">
-                and order_status=#{orderPageDTO.orderStatus}
+            <if test="orderStatus!=null">
+                and order_status=#{orderStatus}
             </if>
-            <if test="orderPageDTO.orderNo!=null">
-                and order_no=#{orderPageDTO.orderNo}
+            <if test="orderNo!=null and orderNo!=''">
+                and order_no=#{orderNo}
             </if>
         </where>
     </select>

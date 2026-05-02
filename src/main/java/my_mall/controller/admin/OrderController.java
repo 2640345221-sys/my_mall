@@ -42,7 +42,7 @@ public class OrderController {
             recordParams = true, recordResult = true)
     @GetMapping("/{orderNo}")
     public Result<OrderDetailVO> getOrder(@PathVariable("orderNo") String orderNo) {
-        OrderDetailVO orderDetailVO=orderService.getOrderDetail(orderNo);
+        OrderDetailVO orderDetailVO=orderService.aGetOrderDetail(orderNo);
         return Result.success(orderDetailVO);
     }
 
