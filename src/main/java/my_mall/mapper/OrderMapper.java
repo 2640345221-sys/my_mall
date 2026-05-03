@@ -20,7 +20,7 @@ public interface OrderMapper {
 
     Page<Order> getByUserId(OrderPageDTO orderPageDTO, Long userId);
 
-    void setStatus(List<Long> ids, Integer b, LocalDateTime now);
+    void setStatus(List<Long> ids, Integer status, LocalDateTime updateTime);
 
     Page<Order> aGetByUserId(OrderPageDTO orderPageDTO);
 

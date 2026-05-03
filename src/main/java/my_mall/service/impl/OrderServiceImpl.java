@@ -199,6 +199,8 @@ public class OrderServiceImpl implements OrderService {
         OrderDetailVO orderDetailVO=new OrderDetailVO();
         BeanUtils.copyProperties(order,orderDetailVO);
         orderDetailVO.setOrderCartDTO(list);
+        OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
+        orderDetailVO.setOrderAddress(address);
         return  orderDetailVO;
     }
 
@@ -223,6 +225,8 @@ public class OrderServiceImpl implements OrderService {
                 return dto;
             }).collect(Collectors.toList());
             vo.setOrderCartDTO(cartDTOs);
+            OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
+            vo.setOrderAddress(address);
             return vo;
         }).collect(Collectors.toList());
 
@@ -280,7 +284,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         for (Order order : orders) {
-            if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PACKAGED.getStatus())) {
+            if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PAID.getStatus())) {
                 throw new BaseException("订单" + order.getOrderNo() + MessageConstant.ORDER_CANNOT_CHECKOUT);
             }
         }
@@ -336,6 +340,8 @@ public class OrderServiceImpl implements OrderService {
                 return dto;
             }).collect(Collectors.toList());
             vo.setOrderCartDTO(cartDTOs);
+            OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
+            vo.setOrderAddress(address);
             return vo;
         }).collect(Collectors.toList());
 
@@ -360,6 +366,8 @@ public class OrderServiceImpl implements OrderService {
         }).collect(Collectors.toList());
         OrderDetailVO orderDetailVO=new OrderDetailVO();
         BeanUtils.copyProperties(order,orderDetailVO);
+        OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
+        orderDetailVO.setOrderAddress(address);
         orderDetailVO.setOrderCartDTO(list);
         return  orderDetailVO;
     }

@@ -2,6 +2,7 @@ package my_mall.entity.vo;
 
 import lombok.*;
 import my_mall.entity.dto.OrderCartDTO;
+import my_mall.entity.po.OrderAddress;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 @ToString
 @Builder
 public class OrderDetailVO {
+    private Long id;
     private  String orderNo;
     private  Long userId;
     private  Integer totalPrice;
@@ -21,4 +23,5 @@ public class OrderDetailVO {
     private LocalDateTime payTime;
     private  LocalDateTime createTime;
     private List<OrderCartDTO> orderCartDTO;
+    private OrderAddress orderAddress;
 }

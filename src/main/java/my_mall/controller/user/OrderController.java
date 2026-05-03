@@ -77,7 +77,7 @@ public class OrderController {
     @Operation(summary = "支付成功回调")
     @OperationLog(module = "用户订单模块", type = "更新", description = "支付成功回调",
             recordParams = true, recordResult = true)
-    @GetMapping("/paySuccess")
+    @PostMapping("/paySuccess")
     public Result paySuccess(OrderPayDTO orderPayDTO) {
         orderService.paySuccess(orderPayDTO);
         return Result.success();

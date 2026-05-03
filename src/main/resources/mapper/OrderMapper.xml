@@ -38,15 +38,15 @@
         <foreach collection="ordersList" item="order" separator=";">
             update my_mall.`order`
             <set>
-                <if test="order.totalPrice != null">total_price = #{totalPrice},</if>
-                <if test="order.payStatus != null">pay_status = #{payStatus},</if>
-                <if test="order.payType != null">pay_type = #{payType},</if>
-                <if test="order.payTime != null">pay_time = #{payTime},</if>
-                <if test="order.orderStatus != null">order_status = #{orderStatus},</if>
-                <if test="order.extraInfo != null">extra_info = #{extraInfo},</if>
-                <if test="order.updateTime != null">update_time = #{updateTime},</if>
+                <if test="order.totalPrice != null">total_price = #{order.totalPrice},</if>
+                <if test="order.payStatus != null">pay_status = #{order.payStatus},</if>
+                <if test="order.payType != null">pay_type = #{order.payType},</if>
+                <if test="order.payTime != null">pay_time = #{order.payTime},</if>
+                <if test="order.orderStatus != null">order_status = #{order.orderStatus},</if>
+                <if test="order.extraInfo != null">extra_info = #{order.extraInfo},</if>
+                <if test="order.updateTime != null">update_time = #{order.updateTime},</if>
             </set>
-            where order_no=#{orderNo}
+            where order_no=#{order.orderNo}
         </foreach>
     </update>
     <select id="getByOrderNo" resultType="my_mall.entity.po.Order">
