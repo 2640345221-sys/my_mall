@@ -23,6 +23,7 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
         if(!(handler instanceof HandlerMethod)){
             return true;
         }
+        TLUtils.remove();
         String token=request.getHeader(jwtProperties.getAdminTokenName());
         if (token == null || token.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

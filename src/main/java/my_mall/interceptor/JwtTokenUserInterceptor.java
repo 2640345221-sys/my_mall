@@ -22,8 +22,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         if(!(handler instanceof HandlerMethod)){
             return true;
         }
-
-
+        TLUtils.remove();
         String token=request.getHeader(jwtProperties.getUserTokenName());
         if (token == null || token.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
