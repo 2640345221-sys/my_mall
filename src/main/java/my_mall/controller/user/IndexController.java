@@ -3,6 +3,7 @@ package my_mall.controller.user;
 import java.util.List;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,15 +26,13 @@ import my_mall.service.IndexConfigService;
 public class IndexController {
     @Resource
     private IndexConfigService indexConfigService;
-
     @Resource
-    private CarouselService carouselService;
-
+    private RedisTemplate<String, Object> redisTemplate;
     @GetMapping("/new")
     @Operation(summary = "获取新品商品")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取新品商品",
             recordParams = true, recordResult = true)
-    @Cacheable(cacheNames = "newCache")
+    @Cacheable(cacheNames = "newCache",sync = true)
     public Result<List<Goods>> getNewGoods() {
         List<Goods> list=indexConfigService.getNewGoods();
         return Result.success(list);
@@ -43,7 +42,7 @@ public class IndexController {
     @Operation(summary = "获取热门商品")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取热门商品",
             recordParams = true, recordResult = true)
-    @Cacheable(cacheNames = "popularCache")
+    @Cacheable(cacheNames = "popularCache",sync = true)
     public Result<List<Goods>> getPopularGoods() {
         List<Goods> list=indexConfigService.getPopularGoods();
         return Result.success(list);
@@ -53,11 +52,12 @@ public class IndexController {
     @Operation(summary = "获取推荐商品")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取推荐商品",
             recordParams = true, recordResult = true)
-    @Cacheable(cacheNames = "recommendCache")
+    @Cacheable(cacheNames = "recommendCache",sync = true)
     public Result<List<Goods>> getRecommendGoods() {
         List<Goods> list=indexConfigService.getRecommendGoods();
         return Result.success(list);
     }
+
 
 /*    @GetMapping("/carousel")
     @Operation(summary = "获取轮播图")

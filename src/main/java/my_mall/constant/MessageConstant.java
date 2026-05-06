@@ -33,5 +33,9 @@ public class MessageConstant {
     public static final String ADMIN_NOT_EXIST="不存在该用户";
     public static final String ADMIN_PASSWORD_ERROR="该用户的密码错误";
     public static final String ADDRESS_NOT_BELONG="该地址不属于该用户";
-
+    public static final String SECKILL_ORDER_NOT_EXIST = "秒杀订单不存在";
+    public static final String SECKILL_PRICE_INVALID = "秒杀价格不合规";
+    public static final String SECKILL_STOCK_INVALID = "秒杀库存不合规";
+    public static final String SECKILL_TIME_INVALID = "秒杀开始时间必须早于结束时间，且结束时间不能早于当前时间";
+    public static final String SECKILL_GOODS_NOT_EXIST = "秒杀商品不存在";
 }

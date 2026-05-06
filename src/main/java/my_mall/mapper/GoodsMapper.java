@@ -31,7 +31,7 @@ public interface GoodsMapper {
     @OperationFill(fillUpdateTime = true,fillUpdateUser = true)
     void updateGoods(Goods goods);
 
-    void deductStock(List<StockDeductDTO> list);
+    int deductStock(List<StockDeductDTO> list);
 
     void recoverStock(List<StockDeductDTO> stockList);
     @Select("select * from my_mall.goods where category_id=#{categoryId} and name=#{name}")

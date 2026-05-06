@@ -1,6 +1,5 @@
 package my_mall.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -15,6 +14,7 @@ import my_mall.exception.AddressNotExistException;
 import my_mall.mapper.AddressMapper;
 import my_mall.service.AddressService;
 import my_mall.utils.TLUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AddressServiceImpl implements AddressService {
@@ -22,8 +22,12 @@ public class AddressServiceImpl implements AddressService {
     private AddressMapper addressMapper;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void insert(UserAddress userAddress) {
         userAddress.setUserId(TLUtils.getUserId());
+        if(userAddress.getIsDefault()){
+            addressMapper.cancelDefault();
+        }
         addressMapper.insert(userAddress);
     }
 
@@ -67,6 +71,9 @@ public class AddressServiceImpl implements AddressService {
     public void update(UserAddress userAddress) {
         Long userId = TLUtils.getUserId();
         UserAddress address = addressMapper.getAddressById(userAddress.getId());
+        if(userAddress.getIsDefault()){
+            addressMapper.cancelDefault();
+        }
         if(address==null){
             throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST + "，地址ID：" + userAddress.getId() + "，操作用户ID：" + userId);
         }

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import my_mall.config.mapper.JacksonObjectMapper;
 import my_mall.interceptor.JwtTokenAdminInterceptor;
 import my_mall.interceptor.JwtTokenUserInterceptor;
+import my_mall.utils.TLUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -45,6 +46,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         log.info("拓展消息转换器");
+        TLUtils.setUserId(1L);
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(new JacksonObjectMapper());
         converters.add(converter);

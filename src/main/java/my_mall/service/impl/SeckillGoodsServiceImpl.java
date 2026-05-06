@@ -1,0 +1,131 @@
+package my_mall.service.impl;
+
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import my_mall.constant.MessageConstant;
+import my_mall.entity.dto.SeckillGoodsPageDTO;
+import my_mall.entity.po.Goods;
+import my_mall.entity.po.SeckillGoods;
+import my_mall.exception.BusinessException;
+import my_mall.mapper.GoodsMapper;
+import my_mall.mapper.SeckillGoodsMapper;
+import my_mall.result.PageResult;
+import my_mall.service.SeckillGoodsService;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.time.LocalDateTime;
+
+@Service
+@Slf4j
+public class SeckillGoodsServiceImpl implements SeckillGoodsService {
+
+    @Resource
+    private SeckillGoodsMapper seckillGoodsMapper;
+    @Resource
+    private GoodsMapper goodsMapper;
+    @Resource
+    private RedisTemplate redisTemplate;
+
+
+    @PostConstruct
+    public void initSeckillStock() {
+        List<SeckillGoods> activeList = seckillGoodsMapper.selectActiveList();
+        for (SeckillGoods goods : activeList) {
+            String stockKey = "seckill:stock:" + goods.getId();
+            int stockInt=goods.getStockCount().intValue();
+            redisTemplate.opsForValue().set(stockKey,stockInt);
+            log.info("预热秒杀商品库存，ID: {}, 库存: {}", goods.getId(), goods.getStockCount());
+        }
+    }
+    @Override
+    @Transactional
+    public void save(SeckillGoods seckillGoods) {
+        Goods goods = goodsMapper.getById(seckillGoods.getGoodsId());
+        if (goods == null) {
+            throw new BusinessException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + seckillGoods.getGoodsId());
+        }
+        if (seckillGoods.getSeckillPrice() == null || seckillGoods.getSeckillPrice() <= 0||seckillGoods.getSeckillPrice() > goods.getSellingPrice()) {
+            throw new BusinessException(MessageConstant.SECKILL_PRICE_INVALID);
+        }
+        if (seckillGoods.getStockCount() == null || seckillGoods.getStockCount() < 0||seckillGoods.getStockCount()>goods.getStockNum()) {
+            throw new BusinessException(MessageConstant.SECKILL_STOCK_INVALID);
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (seckillGoods.getStartTime() == null || seckillGoods.getEndTime() == null ||
+                seckillGoods.getStartTime().isAfter(seckillGoods.getEndTime()) ||
+                seckillGoods.getEndTime().isBefore(now)) {
+            throw new BusinessException(MessageConstant.SECKILL_TIME_INVALID);
+        }
+        seckillGoods.setStatus(1);
+        seckillGoodsMapper.insert(seckillGoods);
+        log.info("新增秒杀商品成功，ID：{}，商品ID：{}", seckillGoods.getId(), seckillGoods.getGoodsId());
+    }
+
+    @Override
+    @Transactional
+    public void update(SeckillGoods seckillGoods) {
+        SeckillGoods existing = seckillGoodsMapper.getById(seckillGoods.getId());
+        if (existing == null) {
+            throw new BusinessException(MessageConstant.SECKILL_GOODS_NOT_EXIST + "，ID：" + seckillGoods.getId());
+        }
+        if (seckillGoods.getSeckillPrice() != null && seckillGoods.getSeckillPrice() <= 0) {
+            throw new BusinessException(MessageConstant.SECKILL_PRICE_INVALID);
+        }
+        if (seckillGoods.getStockCount() != null && seckillGoods.getStockCount() < 0) {
+            throw new BusinessException(MessageConstant.SECKILL_STOCK_INVALID);
+        }
+        if (seckillGoods.getStartTime() != null && seckillGoods.getEndTime() != null &&
+                seckillGoods.getStartTime().isAfter(seckillGoods.getEndTime())) {
+            throw new BusinessException(MessageConstant.SECKILL_TIME_INVALID);
+        }
+        seckillGoodsMapper.update(seckillGoods);
+        log.info("更新秒杀商品成功，ID：{}", seckillGoods.getId());
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(Long id) {
+        SeckillGoods seckillGoods = seckillGoodsMapper.getById(id);
+        if (seckillGoods == null) {
+            throw new BusinessException(MessageConstant.SECKILL_GOODS_NOT_EXIST + "，ID：" + id);
+        }
+        seckillGoodsMapper.deleteById(id);
+        log.info("删除秒杀商品成功，ID：{}", id);
+    }
+
+    @Override
+    public PageResult page(SeckillGoodsPageDTO pageDTO) {
+        PageHelper.startPage(pageDTO.getPageNumber(), pageDTO.getPageSize());
+        Page<SeckillGoods> page = seckillGoodsMapper.pageQuery(pageDTO);
+        PageResult pageResult = new PageResult();
+        pageResult.setTotal(page.getTotal());
+        pageResult.setTotalPage(page.getPages());
+        pageResult.setRecords(page.getResult());
+        return pageResult;
+    }
+
+    @Override
+    public SeckillGoods getById(Long id) {
+        SeckillGoods seckillGoods = seckillGoodsMapper.getById(id);
+        if (seckillGoods == null) {
+            throw new BusinessException(MessageConstant.SECKILL_GOODS_NOT_EXIST + "，ID：" + id);
+        }
+        return seckillGoods;
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Long id,Integer status) {
+        SeckillGoods existing = seckillGoodsMapper.getById(id);
+        if (existing == null) {
+            throw new BusinessException(MessageConstant.SECKILL_GOODS_NOT_EXIST + "，ID：" + id);
+        }
+        seckillGoodsMapper.updateStatus(id, status);
+        log.info("修改秒杀商品状态成功，ID：{}，新状态：{}", id, status);
+    }
+}

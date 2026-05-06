@@ -1,10 +1,14 @@
 package my_mall.service;
 
+import my_mall.entity.dto.SeckillOrderDTO;
+
 public interface CommonService {
-    public void resetPopularGoods();
+    void resetPopularGoods();
 
-    public void resetNewGoods();
+    void resetNewGoods();
 
-    public void resetRecommendGoods();
+    void resetRecommendGoods();
+
+    void createOrderAndReduceDbStock(SeckillOrderDTO seckillOrderDTO);
 
 }

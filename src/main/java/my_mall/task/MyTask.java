@@ -3,7 +3,10 @@ package my_mall.task;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import my_mall.entity.po.SeckillGoods;
+import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.service.IndexConfigService;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +17,6 @@ import my_mall.entity.po.Order;
 import my_mall.enums.OrderStatusEnum;
 import my_mall.exception.AutoConfirmException;
 import my_mall.exception.TimeOutOrderException;
-import my_mall.mapper.GoodsMapper;
-import my_mall.mapper.IndexConfigMapper;
 import my_mall.mapper.OrderMapper;
 
 @Component
@@ -24,13 +25,13 @@ public class MyTask {
     @Resource
     private OrderMapper orderMapper;
     @Resource
-    private GoodsMapper goodsMapper;
-    @Resource
-    private IndexConfigMapper indexConfigMapper;
-    @Resource
     private IndexConfigService indexConfigService;
+    @Resource
+    private SeckillGoodsMapper seckillGoodsMapper;
+    @Resource
+    private RedisTemplate redisTemplate;
 
-    @Scheduled(cron = "0 30 * * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     @Transactional
     public void processTimeoutOrder(){
         try {
@@ -77,6 +78,17 @@ public class MyTask {
         log.info("开始执行首页配置重置任务");
         indexConfigService.resetIndexConfig();
         log.info("首页配置重置任务完成");
+    }
+
+    @Scheduled(cron = "0 */30 * * * ?")
+    public void seckillGoodsResetTask() {
+        List<SeckillGoods> activeList = seckillGoodsMapper.selectActiveList();
+        for (SeckillGoods goods : activeList) {
+            String stockKey = "seckill:stock:" + goods.getId();
+            int stockInt=goods.getStockCount().intValue();
+            redisTemplate.opsForValue().set(stockKey,stockInt);
+            log.info("预热秒杀商品库存，ID: {}, 库存: {}", goods.getId(), goods.getStockCount());
+        }
     }
 
 

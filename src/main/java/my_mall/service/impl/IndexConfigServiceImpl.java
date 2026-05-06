@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import my_mall.service.CommonService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import com.github.pagehelper.Page;
@@ -104,8 +105,13 @@ public class IndexConfigServiceImpl implements IndexConfigService {
         return goods;
     }
 
-    @CacheEvict(allEntries = true,value={"recommendCache","popularCache","newCache"})
+    @Caching(evict = {
+            @CacheEvict(value = "newCache", allEntries = true),
+            @CacheEvict(value = "popularCache", allEntries = true),
+            @CacheEvict(value = "recommendCache", allEntries = true)
+    })
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void resetIndexConfig() {
         commonService.resetRecommendGoods();
         commonService.resetNewGoods();
