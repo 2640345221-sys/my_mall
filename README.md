@@ -115,6 +115,8 @@ Redis decrement 扣减库存（若失败则恢复并返回-1）
 ### 压测结论
 分布式锁 + Redis 预减库存方案在高并发下能有效防止超卖，系统吞吐量满足日常秒杀场景需求。
 
+![压力测试结果](https://liuyijia-jiava.oss-cn-beijing.aliyuncs.com/%E5%8E%8B%E5%8A%9B%E6%B5%8B%E8%AF%95%E7%BB%93%E6%9E%9C.png)
+
 ### 防超卖策略
 | 策略 | 作用 |
 |------|------|
@@ -164,7 +166,6 @@ my_mall/
 | `seckill_goods` | 秒杀商品表 |
 | `seckill_order` | 秒杀订单表 |
 
-## 快速开始
 
 ### 环境要求
 - JDK 17+
