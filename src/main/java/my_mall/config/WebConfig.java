@@ -23,6 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Resource
     private JwtTokenUserInterceptor jwtTokenUserInterceptor;
 
+/*
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         log.info("开始注册拦截器");
@@ -35,6 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/user/login")
                 .excludePathPatterns("/api/user/register");
     }
+*/
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

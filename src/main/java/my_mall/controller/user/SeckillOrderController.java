@@ -12,6 +12,8 @@ import my_mall.result.PageResult;
 import my_mall.result.Result;
 import my_mall.service.SeckillOrderService;
 import my_mall.service.SeckillService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "秒杀订单管理模块")
@@ -47,8 +49,14 @@ public class SeckillOrderController {
     @Operation(summary = "处理秒杀商品")
     @OperationLog(module = "用户秒杀订单模块", type = "秒杀", description = "执行秒杀操作",
             recordParams = true, recordResult = true)
-    public Result<Integer> handle(@RequestBody SeckillOrderDTO seckillOrderDTO) {
+    public ResponseEntity<Result<Integer>> handle(@RequestBody SeckillOrderDTO seckillOrderDTO) {
         Integer result = seckillService.seckillWork(seckillOrderDTO);
-        return Result.success(result);
+        if (result == 1) {
+            // 成功：200 OK
+            return ResponseEntity.ok(Result.success(result));
+        } else {
+            // 失败：400 Bad Request，并在 body 中携带业务错误码
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.error("秒杀失败，代码：" + result));
+        }
     }
 }

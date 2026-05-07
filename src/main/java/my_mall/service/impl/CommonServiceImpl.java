@@ -172,8 +172,6 @@ public class CommonServiceImpl implements CommonService {
     @Transactional(rollbackFor = Exception.class)
     public void createOrderAndReduceDbStock(SeckillOrderDTO seckillOrderDTO) {
         Long seckillGoodsId = seckillOrderDTO.getSeckillGoodsId();
-        Long userId= TLUtils.getUserId();
-        userId=1L;
         SeckillGoods seckillGoods= seckillGoodsMapper.getById(seckillGoodsId);
         if(seckillGoods==null){
             throw new BaseException("秒杀商品不存在");
@@ -201,7 +199,7 @@ public class CommonServiceImpl implements CommonService {
 
 
         SeckillOrder seckillOrder =SeckillOrder.builder()
-                .userId(userId)
+                .userId(1L)
                 .goodsId(goods.getId())
                 .orderId(1L)
                 .status(JudgeConstant.ENABLE)

@@ -25,15 +25,11 @@ public class SeckillServiceImpl implements SeckillService {
     @Resource
     private CommonService commonService;
     public Integer seckillWork(SeckillOrderDTO seckillOrderDTO) {
-        Long userId= TLUtils.getUserId();
+       // Long userId= TLUtils.getUserId();
         Long seckillGoodsId= seckillOrderDTO.getSeckillGoodsId();
         String  stockKey="seckill:stock:"+seckillGoodsId;
-        String userKey="seckill:user:"+seckillGoodsId+":"+userId;
+       // String userKey="seckill:user:"+seckillGoodsId+":"+userId;
 
-        log.info(stockKey);
-        log.info(String.valueOf(seckillGoodsId));
-        log.info(String.valueOf(userId));
-        log.info(userKey);
 
         String stockStr = redisTemplate.opsForValue().get(stockKey);
         if(stockStr == null){
@@ -42,9 +38,6 @@ public class SeckillServiceImpl implements SeckillService {
         Integer stockValue = Integer.parseInt(stockStr);
         if(stockValue <= 0){
             return -1;
-        }
-        if(Boolean.TRUE.equals(redisTemplate.hasKey(userKey))){
-            return -2;
         }
 
         RLock lock =redissonClient.getLock("seckill:lock:"+seckillGoodsId);
@@ -62,22 +55,16 @@ public class SeckillServiceImpl implements SeckillService {
             if(currentStock <= 0){
                 return -1;
             }
-            if(Boolean.TRUE.equals(redisTemplate.hasKey(userKey))){
-                return -2;
-            }
-
             Long newStock=redisTemplate.opsForValue().decrement(stockKey,seckillOrderDTO.getCount());
             if(newStock<0){
                 redisTemplate.opsForValue().increment(stockKey,seckillOrderDTO.getCount());
                 return -1;
             }
-            redisTemplate.opsForValue().set(userKey,"1", Duration.ofHours(1));
             commonService.createOrderAndReduceDbStock(seckillOrderDTO);
             return 1;
         }catch (Exception e){
             log.error("秒杀处理异常",e);
             redisTemplate.opsForValue().increment(stockKey);
-            redisTemplate.delete(userKey);
             return -3;
         }finally {
             if(locked&&lock.isHeldByCurrentThread()){
