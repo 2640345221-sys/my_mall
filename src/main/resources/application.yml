@@ -1,6 +1,7 @@
 server:
   port: 8080
 
+
 spring:
   profiles:
     active: dev
@@ -13,6 +14,11 @@ spring:
     multipart:
       max-file-size: 3MB
       max-request-size: 10MB
+  rabbitmq:
+    host: ${kkek.rabbitmq.host}
+    port: ${kkek.rabbitmq.port}
+    username: ${kkek.rabbitmq.username}
+    password: ${kkek.rabbitmq.password}
   data:
     redis:
       host: ${kkek.redis.host}
@@ -39,4 +45,5 @@ aliyun:
     access-key-secret: ${aliyun.oss.access-key-secret}
     bucket-name: ${aliyun.oss.bucket-name}
     endpoint: ${aliyun.oss.endpoint}
+
 

@@ -1,15 +1,18 @@
 package my_mall.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.SneakyThrows;
 import org.springframework.web.multipart.MultipartFile;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.stream.Stream;
 
 public class JSONDataUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    @SneakyThrows
     public static String formatParams(Object[] args) {
         if (args == null || args.length == 0) {
             return "";
@@ -30,6 +33,7 @@ public class JSONDataUtils {
     /**
      * 格式化返回结果：避免超大对象/循环引用
      */
+    @SneakyThrows
     public static String formatResult(Object result) {
         if (result == null) {
             return "null";

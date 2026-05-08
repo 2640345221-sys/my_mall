@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python gen_resume.py)",
+      "Bash(pip list *)",
+      "Bash(mvn compile *)",
+      "Bash(mvn clean *)"
+    ]
+  }
+}

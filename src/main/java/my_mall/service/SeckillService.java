@@ -1,7 +1,8 @@
 package my_mall.service;
 
 import my_mall.entity.dto.SeckillOrderDTO;
+import my_mall.enums.SeckillResultEnum;
 
 public interface SeckillService {
-    Integer seckillWork(SeckillOrderDTO seckillOrderDTO);
+    SeckillResultEnum seckillWork(SeckillOrderDTO seckillOrderDTO);
 }
