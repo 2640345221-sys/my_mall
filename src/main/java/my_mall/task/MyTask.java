@@ -1,5 +1,6 @@
 package my_mall.task;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class MyTask {
     public void processTimeoutOrder(){
         try {
             log.info("处理超时任务");
-            List<Order> ordersList = orderMapper.getByStatusAndTime(0, LocalDateTime.now().plusMinutes(-15));
+            List<Order> ordersList = orderMapper.getByStatusAndTime(OrderStatusEnum.ORDER_PRE_PAY.getStatus(), LocalDateTime.now().plusMinutes(-15));
 
             ordersList.stream().forEach(order -> {
                 order.setUpdateTime(LocalDateTime.now());
@@ -57,11 +58,11 @@ public class MyTask {
     public void processOrderComplete(){
         try {
             log.info("自动确认完成任务");
-            List<Order> ordersList = orderMapper.getByStatusAndTime(3, LocalDateTime.now().plusDays(-7));
+            List<Order> ordersList = orderMapper.getByStatusAndTime(OrderStatusEnum.ORDER_EXPRESS.getStatus(), LocalDateTime.now().plusDays(-7));
 
             ordersList.stream().forEach(order -> {
                 order.setOrderStatus(OrderStatusEnum.ORDER_SUCCESS.getStatus());
-                order.setUpdateTime(LocalDateTime.now()); // 修复：添加更新时间
+                order.setUpdateTime(LocalDateTime.now());
             });
 
             if(!ordersList.isEmpty()) {
@@ -86,7 +87,7 @@ public class MyTask {
         for (SeckillGoods goods : activeList) {
             String stockKey = "seckill:stock:" + goods.getId();
             int stockInt=goods.getStockCount().intValue();
-            redisTemplate.opsForValue().set(stockKey,stockInt);
+            redisTemplate.opsForValue().set(stockKey, stockInt, Duration.ofHours(2));
             log.info("预热秒杀商品库存，ID: {}, 库存: {}", goods.getId(), goods.getStockCount());
         }
     }

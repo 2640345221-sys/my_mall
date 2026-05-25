@@ -11,6 +11,7 @@ import my_mall.entity.dto.UserPageDTO;
 import my_mall.entity.po.User;
 import my_mall.entity.vo.UserVO;
 import my_mall.exception.PasswordErrorException;
+import my_mall.exception.RepeatKeyException;
 import my_mall.exception.UserIsLockedException;
 import my_mall.exception.UserNameNotExistException;
 import my_mall.mapper.UserMapper;
@@ -57,7 +58,7 @@ public class UserServiceImpl  implements UserService {
             nickName = "user" + System.currentTimeMillis() + (int)(Math.random() * 100);
         }
         if(userMapper.getByLoginName(loginDTO.getUsername()) != null){
-            throw new UserNameNotExistException(MessageConstant.USERNAME_EXIST + "，用户名：" + loginDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());
+            throw new RepeatKeyException(MessageConstant.USERNAME_EXIST + "，用户名：" + loginDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());
         }
         if(loginDTO.getPassword()==null){
             throw new PasswordErrorException(MessageConstant.PASSWORD_EMPTY + "，用户名：" + loginDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());

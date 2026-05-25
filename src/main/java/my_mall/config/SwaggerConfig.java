@@ -17,8 +17,8 @@ public class SwaggerConfig {
                         .version("1.0")
                         .description("My Mall 商城系统 API 接口文档")
                         .contact(new Contact()
-                                .name("开发者")
-                                .email("developer@example.com")));
+                                .name("刘一")
+                                .email("helin242348@163.com")));
     }
 
 }

@@ -28,7 +28,6 @@ public class MessageConstant {
     public static final String POWER_NOT_ENOUGH="无权操作";
     public static final String POWER_NOT_ENOUGH_ORDER="无权操作此订单";
     public static final String POWER_NOT_ENOUGH_CART="修改权限不足";
-    public static final String CAROUSEL_NOT_EXIST="轮播图不存在";
     public static final String INDEX_CONFIG_NOT_EXIST="首页配置不存在";
     public static final String ADMIN_NOT_EXIST="不存在该用户";
     public static final String ADMIN_PASSWORD_ERROR="该用户的密码错误";

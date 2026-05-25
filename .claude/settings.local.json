@@ -5,7 +5,15 @@
       "Bash(python gen_resume.py)",
       "Bash(pip list *)",
       "Bash(mvn compile *)",
-      "Bash(mvn clean *)"
+      "Bash(mvn clean *)",
+      "Bash(redis-cli FLUSHDB)",
+      "Bash(rabbitmqctl status *)",
+      "Bash(rabbitmq-service.bat status *)",
+      "Bash(rabbitmq-server.bat status *)",
+      "Bash(dir \"C:\\\\ProgramData\\\\RabbitMQ\")",
+      "Bash(\"E:/rabbitmq/rabbitmq_server-4.3.0/sbin/rabbitmq-server.bat\")",
+      "Bash(\"E:/rabbitmq/rabbitmq_server-4.3.0/sbin/rabbitmqctl.bat\" status *)",
+      "Bash(cmd *)"
     ]
   }
 }

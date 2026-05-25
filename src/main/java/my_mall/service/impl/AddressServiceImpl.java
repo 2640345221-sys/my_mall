@@ -26,7 +26,7 @@ public class AddressServiceImpl implements AddressService {
     public void insert(UserAddress userAddress) {
         userAddress.setUserId(TLUtils.getUserId());
         if(userAddress.getIsDefault()){
-            addressMapper.cancelDefault();
+            addressMapper.cancelDefault(userAddress.getUserId());
         }
         addressMapper.insert(userAddress);
     }
@@ -72,7 +72,7 @@ public class AddressServiceImpl implements AddressService {
         Long userId = TLUtils.getUserId();
         UserAddress address = addressMapper.getAddressById(userAddress.getId());
         if(userAddress.getIsDefault()){
-            addressMapper.cancelDefault();
+            addressMapper.cancelDefault(userId);
         }
         if(address==null){
             throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST + "，地址ID：" + userAddress.getId() + "，操作用户ID：" + userId);

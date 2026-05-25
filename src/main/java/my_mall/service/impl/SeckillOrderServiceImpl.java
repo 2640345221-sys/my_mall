@@ -4,14 +4,16 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import my_mall.constant.JudgeConstant;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.PageDTO;
 import my_mall.entity.po.SeckillOrder;
-import my_mall.exception.BusinessException;
+import my_mall.exception.SeckillException;
 import my_mall.mapper.SeckillOrderMapper;
 import my_mall.result.PageResult;
 import my_mall.service.SeckillOrderService;
 import my_mall.utils.TLUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -22,6 +24,8 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
 
     @Resource
     private SeckillOrderMapper seckillOrderMapper;
+    @Resource(name = "stringRedisTemplate")
+    private StringRedisTemplate redisTemplate;
 
     @Override
     public PageResult page(PageDTO pageDTO) {
@@ -39,7 +43,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     public SeckillOrder getById(Long id) {
         SeckillOrder order = seckillOrderMapper.getById(id);
         if (order == null) {
-            throw new BusinessException(MessageConstant.SECKILL_ORDER_NOT_EXIST + "，订单ID：" + id);
+            throw new SeckillException(MessageConstant.SECKILL_ORDER_NOT_EXIST + "，订单ID：" + id);
         }
         return order;
     }
@@ -47,6 +51,10 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     @Override
     public SeckillOrder result(Long seckillGoodsId) {
         Long userId = TLUtils.getUserId();
+        String failKey = "seckill:fail:" + seckillGoodsId + ":" + userId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(failKey))) {
+            return SeckillOrder.builder().status(-1).build();
+        }
         SeckillOrder order = seckillOrderMapper.getByUserIdAndGoodsId(userId, seckillGoodsId);
         if (order == null) {
             log.info("用户 {} 未参与秒杀商品 {} 或未产生订单", userId, seckillGoodsId);

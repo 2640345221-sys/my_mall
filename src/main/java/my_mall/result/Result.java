@@ -8,7 +8,7 @@ import java.io.Serializable;
 public class Result<T> implements Serializable {
     private Integer code;
     private String message;
-    T data;
+    private T data;
     public static<T> Result<T> success() {
         Result result = new Result<T>();
         result.setCode(1);

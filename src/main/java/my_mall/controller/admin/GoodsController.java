@@ -73,7 +73,6 @@ public class GoodsController {
     @OperationLog(module = "管理端商品模块",type = "更新",description = "更新商品信息",
             recordParams = true,recordResult = true)
     public Result updateGoods(@RequestBody Goods goods){
-        System.out.println(111);
         indexConfigService.resetIndexConfig();
         goodsService.updateGoods(goods);
         return Result.success();

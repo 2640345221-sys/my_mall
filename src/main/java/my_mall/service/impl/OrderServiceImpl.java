@@ -1,13 +1,11 @@
 package my_mall.service.impl;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
@@ -18,6 +16,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 
 import jakarta.annotation.Resource;
+import my_mall.utils.IdGenerator;
 import lombok.SneakyThrows;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.OrderCartDTO;
@@ -66,6 +65,8 @@ public class OrderServiceImpl implements OrderService {
     private GoodsMapper goodsMapper;
     @Resource
     private ShoppingCartMapper shoppingCartMapper;
+    @Resource
+    private IdGenerator idGenerator;
     @SneakyThrows
     @Override
     @Transactional
@@ -83,41 +84,41 @@ public class OrderServiceImpl implements OrderService {
         if(cartList==null|| cartList.isEmpty()){
             throw new CartItemNotExistException(MessageConstant.CART_EMPTY + "，购物车项ID：" + cartItemIds + "，操作用户ID：" + userId);
         }
-        List<StockDeductDTO> list=new ArrayList<>();
+        List<StockDeductDTO> list = new ArrayList<>();
 
-        Integer totalPrice=0;
-        for(OrderCartDTO cartItem:cartList){
-            Goods goods=goodsMapper.getById(cartItem.getGoodsId());
-            if(goods==null){
+        Integer totalPrice = 0;
+        for (OrderCartDTO cartItem : cartList) {
+            Goods goods = goodsMapper.getById(cartItem.getGoodsId());
+            if (goods == null) {
                 throw new GoodsNotExistException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + cartItem.getGoodsId() + "，操作用户ID：" + userId);
             }
-            if(goods.getSellStatus()){
+            if (goods.getSellStatus()) {
                 throw new GoodsIsNotSellingException(MessageConstant.GOODS_NOT_SELLING + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，操作用户ID：" + userId);
             }
-            if(cartItem.getCount()>goods.getStockNum()){
+            if (cartItem.getCount() > goods.getStockNum()) {
                 throw new StockNumNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，库存：" + goods.getStockNum() + "，操作用户ID：" + userId);
             }
-            totalPrice+=cartItem.getCount()*goods.getSellingPrice();
+            totalPrice += cartItem.getCount() * goods.getSellingPrice();
             cartItem.setPrice(goods.getSellingPrice());
-            list.add(new StockDeductDTO(goods.getId(),cartItem.getCount()));
+            list.add(new StockDeductDTO(goods.getId(), cartItem.getCount()));
         }
 
         goodsMapper.deductStock(list);
 
         //从上述数据总结出order
-        Order order =new Order();
+        Order order = new Order();
         order.setUserId(userId);
         order.setTotalPrice(totalPrice);
         order.setPayStatus(OrderPayStatusEnum.NO_PAY.getValue());
         order.setOrderStatus(OrderStatusEnum.ORDER_PRE_PAY.getStatus());
         order.setPayType(OrderPayTypeEnum.NO_PAY.getValue());
         order.setExtraInfo("");
-        order.setOrderNo(generateOrderNo());
+        order.setOrderNo(idGenerator.generateOrderNo());
         orderMapper.insert(order);
 
-        List<OrderItem> orderItemList=cartList.stream().map(x->{
-            OrderItem orderItem=new OrderItem();
-            BeanUtils.copyProperties(x,orderItem);
+        List<OrderItem> orderItemList = cartList.stream().map(x -> {
+            OrderItem orderItem = new OrderItem();
+            BeanUtils.copyProperties(x, orderItem);
             orderItem.setCreateTime(LocalDateTime.now());
             orderItem.setOrderId(order.getId());
             return orderItem;
@@ -182,59 +183,23 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDetailVO getOrderDetail(String orderNo) {
-        Long userId=TLUtils.getUserId();
-        Order order=orderMapper.getByOrderNo(orderNo);
+        Long userId = TLUtils.getUserId();
+        Order order = orderMapper.getByOrderNo(orderNo);
         if (order == null) {
             throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单号：" + orderNo + "，操作用户ID：" + userId);
         }
         if (!order.getUserId().equals(userId)) {
             throw new PowerIsNotEnoughException(MessageConstant.POWER_NOT_ENOUGH + "，订单号：" + orderNo + "，订单用户ID：" + order.getUserId() + "，操作用户ID：" + userId);
         }
-        List<OrderItem> itemList=orderItemMapper.getByOrderId(order.getId());
-        List<OrderCartDTO> list=itemList.stream().map(x->{
-            OrderCartDTO cartItemDTO=new OrderCartDTO();
-            BeanUtils.copyProperties(x,cartItemDTO);
-            return cartItemDTO;
-        }).collect(Collectors.toList());
-        OrderDetailVO orderDetailVO=new OrderDetailVO();
-        BeanUtils.copyProperties(order,orderDetailVO);
-        orderDetailVO.setOrderCartDTO(list);
-        OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
-        orderDetailVO.setOrderAddress(address);
-        return  orderDetailVO;
+        return toDetailVO(order);
     }
 
     @Override
     public PageResult getPage(OrderPageDTO orderPageDTO) {
         Long userId = TLUtils.getUserId();
         PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
-        Page<Order> page=orderMapper.getByUserId(orderPageDTO,userId);
-        List<Long> ids=page.getResult().stream().map(Order::getId).collect(Collectors.toList());
-        List<OrderItem> list=orderItemMapper.getBatchByOrderId(ids);
-        Map<Long, List<OrderItem>> itemMap = list.stream()
-                .collect(Collectors.groupingBy(OrderItem::getOrderId));
-        List<Order>orders=page.getResult();
-
-        List<OrderDetailVO> detailVOList = orders.stream().map(order -> {
-            OrderDetailVO vo = new OrderDetailVO();
-            BeanUtils.copyProperties(order, vo);
-            List<OrderItem> items = itemMap.getOrDefault(order.getId(), Collections.emptyList());
-            List<OrderCartDTO> cartDTOs = items.stream().map(item -> {
-                OrderCartDTO dto = new OrderCartDTO();
-                BeanUtils.copyProperties(item, dto);
-                return dto;
-            }).collect(Collectors.toList());
-            vo.setOrderCartDTO(cartDTOs);
-            OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
-            vo.setOrderAddress(address);
-            return vo;
-        }).collect(Collectors.toList());
-
-        PageResult pageResult = new PageResult();
-        pageResult.setTotal(page.getTotal());
-        pageResult.setTotalPage(page.getPages());
-        pageResult.setRecords(detailVOList);
-        return pageResult;
+        Page<Order> page = orderMapper.getByUserId(orderPageDTO, userId);
+        return buildPageResult(page);
     }
 
     @Override
@@ -307,9 +272,6 @@ public class OrderServiceImpl implements OrderService {
                     && status != OrderStatusEnum.ORDER_PACKAGED.getStatus()) {
                 throw new BaseException("订单" + order.getOrderNo() + MessageConstant.ORDER_CANNOT_CLOSE);
             }
-        }
-
-        for (Order order : orders) {
             List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
             List<StockDeductDTO> stockRecoverList = items.stream()
                     .map(item -> new StockDeductDTO(item.getGoodsId(), item.getCount()))
@@ -323,25 +285,42 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public PageResult aGetPage(OrderPageDTO orderPageDTO) {
         PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
-        Page<Order> page=orderMapper.aGetByUserId(orderPageDTO);
-        List<Long> ids=page.getResult().stream().map(Order::getId).collect(Collectors.toList());
-        List<OrderItem> list=orderItemMapper.getBatchByOrderId(ids);
-        Map<Long, List<OrderItem>> itemMap = list.stream()
-                .collect(Collectors.groupingBy(OrderItem::getOrderId));
-        List<Order>orders=page.getResult();
+        Page<Order> page = orderMapper.aGetByUserId(orderPageDTO);
+        return buildPageResult(page);
+    }
 
-        List<OrderDetailVO> detailVOList = orders.stream().map(order -> {
+    private OrderDetailVO toDetailVO(Order order) {
+        List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
+        List<OrderCartDTO> cartDTOs = items.stream().map(item -> {
+            OrderCartDTO dto = new OrderCartDTO();
+            BeanUtils.copyProperties(item, dto);
+            return dto;
+        }).collect(Collectors.toList());
+
+        OrderDetailVO vo = new OrderDetailVO();
+        BeanUtils.copyProperties(order, vo);
+        vo.setOrderCartDTO(cartDTOs);
+        vo.setOrderAddress(orderAddressMapper.getByOrderId(order.getId()));
+        return vo;
+    }
+
+    private PageResult buildPageResult(Page<Order> page) {
+        List<Long> ids = page.getResult().stream().map(Order::getId).collect(Collectors.toList());
+        List<OrderItem> items = orderItemMapper.getBatchByOrderId(ids);
+        Map<Long, List<OrderItem>> itemMap = items.stream()
+                .collect(Collectors.groupingBy(OrderItem::getOrderId));
+
+        List<OrderDetailVO> detailVOList = page.getResult().stream().map(order -> {
             OrderDetailVO vo = new OrderDetailVO();
             BeanUtils.copyProperties(order, vo);
-            List<OrderItem> items = itemMap.getOrDefault(order.getId(), Collections.emptyList());
-            List<OrderCartDTO> cartDTOs = items.stream().map(item -> {
+            List<OrderItem> orderItems = itemMap.getOrDefault(order.getId(), Collections.emptyList());
+            List<OrderCartDTO> cartDTOs = orderItems.stream().map(item -> {
                 OrderCartDTO dto = new OrderCartDTO();
                 BeanUtils.copyProperties(item, dto);
                 return dto;
             }).collect(Collectors.toList());
             vo.setOrderCartDTO(cartDTOs);
-            OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
-            vo.setOrderAddress(address);
+            vo.setOrderAddress(orderAddressMapper.getByOrderId(order.getId()));
             return vo;
         }).collect(Collectors.toList());
 
@@ -354,33 +333,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDetailVO aGetOrderDetail(String orderNo) {
-        Order order=orderMapper.getByOrderNo(orderNo);
+        Order order = orderMapper.getByOrderNo(orderNo);
         if (order == null) {
             throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单号：" + orderNo);
         }
-        List<OrderItem> itemList=orderItemMapper.getByOrderId(order.getId());
-        List<OrderCartDTO> list=itemList.stream().map(x->{
-            OrderCartDTO cartItemDTO=new OrderCartDTO();
-            BeanUtils.copyProperties(x,cartItemDTO);
-            return cartItemDTO;
-        }).collect(Collectors.toList());
-        OrderDetailVO orderDetailVO=new OrderDetailVO();
-        BeanUtils.copyProperties(order,orderDetailVO);
-        OrderAddress address =orderAddressMapper.getByOrderId(order.getId());
-        orderDetailVO.setOrderAddress(address);
-        orderDetailVO.setOrderCartDTO(list);
-        return  orderDetailVO;
+        return toDetailVO(order);
     }
 
-    /**
-     * 生成一个根据时间戳和随机数的订单号
-     * @return
-     */
-    public static String generateOrderNo() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
-        String timePart = LocalDateTime.now().format(formatter);
-        int random = ThreadLocalRandom.current().nextInt(1000);
-        String randomPart = String.format("%03d", random);
-        return timePart + randomPart;
-    }
 }

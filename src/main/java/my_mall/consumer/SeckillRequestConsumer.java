@@ -1,4 +1,4 @@
-package my_mall.service.impl;
+package my_mall.consumer;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -6,7 +6,7 @@ import my_mall.config.RabbitMQConfig;
 import my_mall.constant.JudgeConstant;
 import my_mall.entity.dto.SeckillMessage;
 import my_mall.entity.po.SeckillOrder;
-import my_mall.exception.BaseException;
+import my_mall.exception.SeckillException;
 import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.mapper.SeckillOrderMapper;
 import org.redisson.api.RLock;
@@ -81,7 +81,7 @@ public class SeckillRequestConsumer {
 
             int rows = seckillGoodsMapper.decreaseStock(seckillGoodsId, message.getCount());
             if (rows == 0) {
-                throw new BaseException("库存不足");
+                throw new SeckillException("库存不足");
             }
             Long goodsId = seckillGoodsMapper.getById(seckillGoodsId).getGoodsId();
             SeckillOrder seckillOrder = SeckillOrder.builder()
@@ -98,6 +98,7 @@ public class SeckillRequestConsumer {
             log.error("秒杀处理异常: userId={}, seckillGoodsId={}", userId, seckillGoodsId, e);
             redisTemplate.opsForValue().increment(stockKey);
             redisTemplate.delete(userKey);
+            redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
         } finally {
             if (locked && lock.isHeldByCurrentThread()) {
                 lock.unlock();

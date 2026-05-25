@@ -14,14 +14,14 @@ import java.util.List;
 @Builder
 public class OrderDetailVO {
     private Long id;
-    private  String orderNo;
-    private  Long userId;
-    private  Integer totalPrice;
-    private  Integer payStatus;
-    private  Integer payType;
-    private  Integer orderStatus;
+    private String orderNo;
+    private Long userId;
+    private Integer totalPrice;
+    private Integer payStatus;
+    private Integer payType;
+    private Integer orderStatus;
     private LocalDateTime payTime;
-    private  LocalDateTime createTime;
+    private LocalDateTime createTime;
     private List<OrderCartDTO> orderCartDTO;
     private OrderAddress orderAddress;
 }

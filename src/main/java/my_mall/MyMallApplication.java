@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableTransactionManagement
-@EnableCaching
 @EnableScheduling
+@EnableCaching
 public class MyMallApplication {
 
     public static void main(String[] args) {

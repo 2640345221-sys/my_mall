@@ -7,8 +7,9 @@ import java.util.stream.Collectors;
 
 import my_mall.service.CommonService;
 import org.springframework.beans.BeanUtils;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.stereotype.Service;
 
 import com.github.pagehelper.Page;
@@ -37,6 +38,8 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     private GoodsMapper goodsMapper;
     @Resource
     private CommonService commonService;
+    @Resource
+    private CacheManager cacheManager;
     @Override
     public PageResult getPage(IndexPageDTO indexPageDTO) {
         PageResult pageResult = new PageResult();
@@ -91,10 +94,7 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     public List<Goods> getPopularGoods() {
         List<IndexConfig> list=indexConfigMapper.getByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
         List<Long> ids=list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
-        if(ids!=null&&ids.size()>0){
-            return goodsMapper.getByIdBatch(ids);
-        }
-        return new ArrayList<Goods>();
+        return goodsMapper.getByIdBatch(ids);
     }
 
     @Override
@@ -105,16 +105,23 @@ public class IndexConfigServiceImpl implements IndexConfigService {
         return goods;
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "newCache", allEntries = true),
-            @CacheEvict(value = "popularCache", allEntries = true),
-            @CacheEvict(value = "recommendCache", allEntries = true)
-    })
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void resetIndexConfig() {
         commonService.resetRecommendGoods();
         commonService.resetNewGoods();
         commonService.resetPopularGoods();
+
+        refreshCache("newCache", getNewGoods());
+        refreshCache("popularCache", getPopularGoods());
+        refreshCache("recommendCache", getRecommendGoods());
+    }
+
+    private void refreshCache(String cacheName, Object value) {
+        Cache cache = cacheManager.getCache(cacheName);
+        if (cache != null) {
+            cache.clear();
+            cache.put(SimpleKey.EMPTY, value);
+        }
     }
 }

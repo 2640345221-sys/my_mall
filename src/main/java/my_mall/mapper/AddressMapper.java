@@ -26,5 +26,5 @@ public interface AddressMapper {
     @Select("select * from my_mall.user_address where user_id=#{userId}")
     List<UserAddress> getByUserId(Long userId);
 
-    void cancelDefault();
+    void cancelDefault(Long userId);
 }

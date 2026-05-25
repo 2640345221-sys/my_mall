@@ -36,7 +36,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
             Claims claims=JwtUtils.parseJwtToken(token,jwtProperties.getUserSecretKey());
             Long userId=Long.valueOf(claims.get("userId").toString());
             if(TLUtils.getUserId()==null){
-                log.info("当前管理员id:{}",userId);
+                log.info("当前用户id:{}",userId);
                 TLUtils.setUserId(userId);
             }
             return true;

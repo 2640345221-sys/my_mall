@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 
-@Component
 public class JwtUtils {
     public static String createJWTToken(String secretKey,long ttlMills, Map<String,Object> claims) {
 

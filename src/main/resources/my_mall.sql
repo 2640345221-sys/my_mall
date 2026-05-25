@@ -38,32 +38,6 @@ INSERT INTO `admin` VALUES (2, 'newbee-admin1', 'e10adc3949ba59abbe56e057f20f883
 INSERT INTO `admin` VALUES (3, 'newbee-admin2', 'e10adc3949ba59abbe56e057f20f883e', '新蜂02', 0);
 
 -- ----------------------------
--- Table structure for carousel
--- ----------------------------
-DROP TABLE IF EXISTS `carousel`;
-CREATE TABLE `carousel`  (
-  `id` int NOT NULL AUTO_INCREMENT COMMENT '首页轮播图主键id',
-  `url` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '轮播图',
-  `redirect_url` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '\'##\'' COMMENT '点击后的跳转地址(默认不跳转)',
-  `rank` int NOT NULL DEFAULT 0 COMMENT '排序值(字段越大越靠前)',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `create_user` int NOT NULL DEFAULT 0 COMMENT '创建者id',
-  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-  `update_user` int NOT NULL DEFAULT 0 COMMENT '修改者id',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Records of carousel
--- ----------------------------
-INSERT INTO `carousel` VALUES (1, 'https://newbee-mall.oss-cn-beijing.aliyuncs.com/images/banner2.jpg', '##', 200, '2019-08-23 17:50:45', 0, '2019-11-10 00:23:01', 0);
-INSERT INTO `carousel` VALUES (2, 'https://newbee-mall.oss-cn-beijing.aliyuncs.com/images/banner1.png', 'https://juejin.im/book/5da2f9d4f265da5b81794d48/section/5da2f9d6f265da5b794f2189', 13, '2019-11-29 00:00:00', 0, '2019-11-29 00:00:00', 0);
-INSERT INTO `carousel` VALUES (3, 'https://newbee-mall.oss-cn-beijing.aliyuncs.com/images/banner3.jpg', '##', 0, '2019-09-18 18:26:38', 0, '2019-11-10 00:23:01', 0);
-INSERT INTO `carousel` VALUES (5, 'https://newbee-mall.oss-cn-beijing.aliyuncs.com/images/banner2.png', 'https://juejin.im/book/5da2f9d4f265da5b81794d48/section/5da2f9d6f265da5b794f2189', 0, '2019-11-29 00:00:00', 0, '2019-11-29 00:00:00', 0);
-INSERT INTO `carousel` VALUES (6, 'https://newbee-mall.oss-cn-beijing.aliyuncs.com/images/banner1.png', '##', 101, '2019-09-19 23:37:40', 0, '2019-11-07 00:15:52', 0);
-INSERT INTO `carousel` VALUES (7, 'https://newbee-mall.oss-cn-beijing.aliyuncs.com/images/banner2.png', '##', 99, '2019-09-19 23:37:58', 0, '2019-10-22 00:15:01', 0);
-
--- ----------------------------
 -- Table structure for goods
 -- ----------------------------
 DROP TABLE IF EXISTS `goods`;

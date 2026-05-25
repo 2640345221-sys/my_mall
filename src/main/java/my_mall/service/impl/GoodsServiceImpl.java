@@ -1,15 +1,7 @@
 package my_mall.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-
 import jakarta.annotation.Resource;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.GoodsPageDTO;
@@ -23,6 +15,13 @@ import my_mall.mapper.GoodsMapper;
 import my_mall.result.PageResult;
 import my_mall.service.GoodsService;
 import my_mall.utils.TLUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GoodsServiceImpl implements GoodsService {
@@ -32,38 +31,21 @@ public class GoodsServiceImpl implements GoodsService {
     private CategoryMapper categoryMapper;
     @Override
     public GoodsDetailVO getGoodsDetail(Long goodsId) {
-        Goods goods=goodsMapper.getById(goodsId);
-        if(goods==null){
+        Goods goods = goodsMapper.getById(goodsId);
+        if (goods == null) {
             throw new GoodsNotExistException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + goodsId + "，操作用户ID：" + TLUtils.getUserId());
         }
-        GoodsDetailVO goodsDetailVO=new GoodsDetailVO();
-        BeanUtils.copyProperties(goods,goodsDetailVO);
-        return goodsDetailVO;
+        return toDetailVO(goods);
     }
 
     @Override
     public PageResult search(GoodsPageSearchDTO goodsPageSearchDTO) {
-        if (goodsPageSearchDTO.getPageNumber() == null) {
-            goodsPageSearchDTO.setPageNumber(1);
-        }
-        if (goodsPageSearchDTO.getPageSize() == null) {
-            goodsPageSearchDTO.setPageSize(10);
-        }
-        
         PageHelper.startPage(goodsPageSearchDTO.getPageNumber(), goodsPageSearchDTO.getPageSize());
-        Page<Goods> goods=goodsMapper.getPage(goodsPageSearchDTO);
-        PageResult pageResult=new PageResult();
+        Page<Goods> goods = goodsMapper.getPage(goodsPageSearchDTO);
+        PageResult pageResult = new PageResult();
         pageResult.setTotal(goods.getTotal());
         pageResult.setTotalPage(goods.getPages());
-        List<GoodsDetailVO> goodsDetailVOList=goods.getResult()
-                .stream()
-                .map(x->{
-                    GoodsDetailVO goodsDetailVO=new GoodsDetailVO();
-                    BeanUtils.copyProperties(x,goodsDetailVO);
-                    return goodsDetailVO;
-                }).collect(Collectors.toList());
-        pageResult.setRecords(goodsDetailVOList);
-
+        pageResult.setRecords(goods.getResult().stream().map(this::toDetailVO).collect(Collectors.toList()));
         return pageResult;
     }
 
@@ -84,32 +66,29 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public GoodsDetailVO getById(Long id) {
-        Goods goods=goodsMapper.getById(id);
-        if(goods==null){
+        Goods goods = goodsMapper.getById(id);
+        if (goods == null) {
             throw new GoodsNotExistException(MessageConstant.GOODS_NOT_EXIST + "，商品ID：" + id + "，操作用户ID：" + TLUtils.getUserId());
         }
-        GoodsDetailVO goodsDetailVO=new GoodsDetailVO();
-        BeanUtils.copyProperties(goods,goodsDetailVO);
-        return goodsDetailVO;
+        return toDetailVO(goods);
     }
 
     @Override
     public PageResult page(GoodsPageDTO goodsPageDTO) {
         PageHelper.startPage(goodsPageDTO.getPageNumber(), goodsPageDTO.getPageSize());
-        Page<Goods> page=goodsMapper.page(goodsPageDTO);
-        List<Goods> glist=page.getResult();
-        List<GoodsDetailVO> goodsDetailVOList=glist.stream().map(x->{
-            GoodsDetailVO goodsDetailVO=new GoodsDetailVO();
-            BeanUtils.copyProperties(x,goodsDetailVO);
-            return goodsDetailVO;
-        }).collect(Collectors.toList());
-        PageResult pageResult=new PageResult();
+        Page<Goods> page = goodsMapper.page(goodsPageDTO);
+        PageResult pageResult = new PageResult();
         pageResult.setTotal(page.getTotal());
         pageResult.setTotalPage(page.getPages());
-        pageResult.setRecords(goodsDetailVOList);
+        pageResult.setRecords(page.getResult().stream().map(this::toDetailVO).collect(Collectors.toList()));
         return pageResult;
     }
-    //TODO这里需要修改，因为没有修改数据库的updateUser和updateTime
+
+    private GoodsDetailVO toDetailVO(Goods goods) {
+        GoodsDetailVO vo = new GoodsDetailVO();
+        BeanUtils.copyProperties(goods, vo);
+        return vo;
+    }
     @Override
     public void updateStatus(Integer sellStatus, List<Long> ids) {
         goodsMapper.updateStatus(sellStatus,ids);

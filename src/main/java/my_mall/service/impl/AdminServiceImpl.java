@@ -1,7 +1,6 @@
 package my_mall.service.impl;
 
 import jakarta.annotation.Resource;
-import jakarta.annotation.Resource;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.AdminUpdateDTO;
 import my_mall.entity.dto.LoginDTO;

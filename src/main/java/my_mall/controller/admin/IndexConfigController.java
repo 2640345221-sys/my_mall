@@ -72,4 +72,13 @@ public class IndexConfigController {
         indexConfigService.resetIndexConfig();
         return Result.success();
     }
+
+    @Operation(summary = "手动刷新首页缓存")
+    @PostMapping("/resetCache")
+    @OperationLog(module = "管理端首页配置模块", type = "更新", description = "手动刷新首页缓存",
+            recordParams = true, recordResult = true)
+    public Result resetCache() {
+        indexConfigService.resetIndexConfig();
+        return Result.success();
+    }
 }

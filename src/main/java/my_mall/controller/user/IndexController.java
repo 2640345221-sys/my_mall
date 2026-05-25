@@ -13,10 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.annotation.OperationLog;
-import my_mall.entity.po.Carousel;
 import my_mall.entity.po.Goods;
 import my_mall.result.Result;
-import my_mall.service.CarouselService;
 import my_mall.service.IndexConfigService;
 
 @Tag(name = "首页配置模块")
@@ -26,8 +24,6 @@ import my_mall.service.IndexConfigService;
 public class IndexController {
     @Resource
     private IndexConfigService indexConfigService;
-    @Resource
-    private RedisTemplate<String, Object> redisTemplate;
     @GetMapping("/new")
     @Operation(summary = "获取新品商品")
     @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取新品商品",
@@ -58,14 +54,4 @@ public class IndexController {
         return Result.success(list);
     }
 
-
-/*    @GetMapping("/carousel")
-    @Operation(summary = "获取轮播图")
-    @OperationLog(module = "用户首页配置模块", type = "查询", description = "获取轮播图",
-            recordParams = true, recordResult = true)
-    @Cacheable(cacheNames = "indexCarousel")
-    public Result<List<Carousel>> getCarousel() {
-        List<Carousel> list=carouselService.getList();
-        return Result.success(list);
-    }*/
 }

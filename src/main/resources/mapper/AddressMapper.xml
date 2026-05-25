@@ -22,6 +22,12 @@
         </set>
         where id=#{id}
     </update>
+    <update id="cancelDefault">
+        update my_mall.user_address
+        set is_default = 0
+        where user_id = #{userId}
+    </update>
+
     <select id="getAddressById" resultType="my_mall.entity.po.UserAddress">
         select * from my_mall.user_address
         where id=#{addressId}

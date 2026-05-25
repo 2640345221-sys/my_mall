@@ -3,20 +3,14 @@ package my_mall.service.impl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.constant.JudgeConstant;
-import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.SeckillOrderDTO;
 import my_mall.entity.dto.StockDeductDTO;
 import my_mall.entity.po.*;
 import my_mall.enums.IndexConfigTypeEnum;
-import my_mall.enums.OrderPayStatusEnum;
-import my_mall.enums.OrderStatusEnum;
-import my_mall.exception.AddressNotExistException;
 import my_mall.exception.BaseException;
 import my_mall.mapper.*;
 import my_mall.service.CommonService;
 import my_mall.utils.TLUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,15 +31,7 @@ public class CommonServiceImpl implements CommonService {
     @Resource
     private SeckillGoodsMapper seckillGoodsMapper;
     @Resource
-    private OrderMapper orderMapper;
-    @Autowired
     private SeckillOrderMapper seckillOrderMapper;
-    @Autowired
-    private OrderItemMapper orderItemMapper;
-    @Autowired
-    private AddressMapper addressMapper;
-    @Autowired
-    private OrderAddressMapper orderAddressMapper;
 
     @Override
     public void resetNewGoods() {
@@ -133,7 +119,7 @@ public class CommonServiceImpl implements CommonService {
         try {
             log.info("开始重新设置推荐商品");
 
-            indexConfigMapper.deleteByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
+            indexConfigMapper.deleteByType(IndexConfigTypeEnum.RECOMMEND_GOODS.getValue());
 
             List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10); // 新增 Mapper 方法
 
@@ -168,12 +154,11 @@ public class CommonServiceImpl implements CommonService {
         }
     }
 
-    @Override
     @Transactional(rollbackFor = Exception.class)
+    @Override
     public void createOrderAndReduceDbStock(SeckillOrderDTO seckillOrderDTO) {
         Long seckillGoodsId = seckillOrderDTO.getSeckillGoodsId();
         Long userId= TLUtils.getUserId();
-        userId=1L;
         SeckillGoods seckillGoods= seckillGoodsMapper.getById(seckillGoodsId);
         if(seckillGoods==null){
             throw new BaseException("秒杀商品不存在");
@@ -188,17 +173,6 @@ public class CommonServiceImpl implements CommonService {
         if(goodsRow==0){
             throw new BaseException("商品库存不足");
         }
-        /*Order order = Order.builder()
-                .userId(userId)
-                .totalPrice(seckillGoods.getSeckillPrice()*seckillOrderDTO.getCount())
-                .orderNo(OrderServiceImpl.generateOrderNo())
-                .extraInfo("")
-                .payType(OrderPayStatusEnum.NO_PAY.getValue())
-                .payStatus(OrderPayStatusEnum.NO_PAY.getValue())
-                .orderStatus(OrderStatusEnum.ORDER_PRE_PAY.getStatus())
-                .build();
-        orderMapper.insert(order);*/
-
 
         SeckillOrder seckillOrder =SeckillOrder.builder()
                 .userId(userId)
@@ -208,24 +182,5 @@ public class CommonServiceImpl implements CommonService {
                 .build();
         seckillOrderMapper.insert(seckillOrder);
 
-       /* OrderItem orderItem=OrderItem.builder()
-                .count(seckillOrderDTO.getCount())
-                .orderId(order.getId())
-                .goodsId(goods.getId())
-                .goodsName(goods.getName())
-                .coverImg(goods.getCoverImg())
-                .price(seckillGoods.getSeckillPrice())
-                .count(seckillOrderDTO.getCount())
-                .build();
-        orderItemMapper.insert(orderItem);
-
-        UserAddress address=addressMapper.getAddressById(seckillOrderDTO.getAddressId());
-        if (address == null || !address.getUserId().equals(userId)) {
-            throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST);
-        }
-        OrderAddress orderAddress=new OrderAddress();
-        BeanUtils.copyProperties(address,orderAddress);
-        orderAddress.setOrderId(order.getId());
-        orderAddressMapper.insert(orderAddress);*/
     }
 }

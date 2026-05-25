@@ -1,4 +1,4 @@
-package my_mall.service.impl;
+package my_mall.consumer;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import my_mall.enums.OrderPayTypeEnum;
 import my_mall.enums.OrderStatusEnum;
 import my_mall.exception.AddressNotExistException;
 import my_mall.mapper.*;
+import my_mall.utils.IdGenerator;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,8 @@ public class SeckillOrderConsumer {
     private AddressMapper addressMapper;
     @Resource
     private OrderAddressMapper orderAddressMapper;
+    @Resource
+    private IdGenerator idGenerator;
 
     @RabbitListener(queues = RabbitMQConfig.SECKILL_QUEUE)
     @Transactional(rollbackFor = Exception.class)
@@ -44,7 +47,7 @@ public class SeckillOrderConsumer {
         Order order = Order.builder()
                 .userId(message.getUserId())
                 .totalPrice(seckillGoods.getSeckillPrice() * message.getCount())
-                .orderNo(OrderServiceImpl.generateOrderNo())
+                .orderNo(idGenerator.generateOrderNo())
                 .extraInfo("")
                 .payType(OrderPayTypeEnum.NO_PAY.getValue())
                 .payStatus(OrderPayStatusEnum.NO_PAY.getValue())

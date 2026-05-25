@@ -1,7 +1,6 @@
 server:
   port: 8080
 
-
 spring:
   profiles:
     active: dev
@@ -19,6 +18,23 @@ spring:
     port: ${kkek.rabbitmq.port}
     username: ${kkek.rabbitmq.username}
     password: ${kkek.rabbitmq.password}
+    connection-timeout: ${kkek.rabbitmq.timeout}
+    template:
+        retry:
+          enabled: true
+          max-retries: 3
+          multiplier: 2
+          initial-interval: 1000ms
+    listener:
+      simple:
+        prefetch: 1
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          max-retries: 3
+          multiplier: 2
+        concurrency: 3
+        max-concurrency: 5
   data:
     redis:
       host: ${kkek.redis.host}

@@ -25,7 +25,7 @@ public interface GoodsMapper {
     void insert(Goods goods);
 
     Page<Goods> page(GoodsPageDTO goodsPageDTO);
-
+    @OperationFill(fillUpdateTime = true,fillUpdateUser = true)
     void updateStatus(Integer sellStatus, List<Long> ids);
 
     @OperationFill(fillUpdateTime = true,fillUpdateUser = true)
