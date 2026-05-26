@@ -1,5 +1,6 @@
 package my_mall.service.impl;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import jakarta.annotation.Resource;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.CategoryDTO;
@@ -10,10 +11,10 @@ import my_mall.mapper.CategoryMapper;
 import my_mall.service.CategoryService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,12 +22,92 @@ import java.util.Map;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
+
+    private static final String CACHE_NAME = "categoryCache";
+
     @Resource
     private CategoryMapper categoryMapper;
-    @Override
-    public List<IndexCategoryVO> getCategory() {
-        List<GoodsCategory> gList = categoryMapper.getAll();
+    @Resource
+    private Cache<String, Object> categoryCache;
+    @Resource
+    private CacheManager cacheManager;
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<IndexCategoryVO> getCategory() {
+        String key = "tree";
+
+        List<IndexCategoryVO> cached = (List<IndexCategoryVO>) categoryCache.getIfPresent(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        org.springframework.cache.Cache redisCache = cacheManager.getCache(CACHE_NAME);
+        if (redisCache != null) {
+            List<IndexCategoryVO> redisValue = redisCache.get(key, List.class);
+            if (redisValue != null) {
+                categoryCache.put(key, redisValue);
+                return redisValue;
+            }
+        }
+
+        List<IndexCategoryVO> result = buildTree(categoryMapper.getAll());
+
+        categoryCache.put(key, result);
+        if (redisCache != null) {
+            redisCache.put(key, result);
+        }
+        return result;
+    }
+
+    @Override
+    public void insert(CategoryDTO categoryInsertDTO) {
+        GoodsCategory category = new GoodsCategory();
+        BeanUtils.copyProperties(categoryInsertDTO, category);
+        categoryMapper.insert(category);
+        evictCategoryCaches();
+    }
+
+    @Override
+    public void deleteBatch(List<Long> ids) {
+        categoryMapper.deleteBatch(ids);
+        evictCategoryCaches();
+    }
+
+    @Override
+    public void update(CategoryDTO categoryDTO) {
+        GoodsCategory category = categoryMapper.getById(categoryDTO.getId());
+        if (category == null) {
+            throw new CategoryNotExistException(MessageConstant.CATEGORY_NOT_EXIST + "，分类ID：" + categoryDTO.getId() + "，操作用户ID：" + TLUtils.getUserId());
+        }
+        BeanUtils.copyProperties(categoryDTO, category);
+        categoryMapper.update(category);
+        evictCategoryCaches();
+    }
+
+    @Override
+    public GoodsCategory getById(Long id) {
+        GoodsCategory category = categoryMapper.getById(id);
+        if (category == null) {
+            throw new CategoryNotExistException(MessageConstant.CATEGORY_NOT_EXIST + "，分类ID：" + id + "，操作用户ID：" + TLUtils.getUserId());
+        }
+        return category;
+    }
+
+    @Override
+    public List<GoodsCategory> getAll() {
+        return categoryMapper.getAll();
+    }
+
+    private void evictCategoryCaches() {
+        categoryCache.invalidateAll();
+        org.springframework.cache.Cache redisCache = cacheManager.getCache(CACHE_NAME);
+        if (redisCache != null) {
+            redisCache.clear();
+        }
+    }
+
+    private List<IndexCategoryVO> buildTree(List<GoodsCategory> gList) {
         Map<Long, IndexCategoryVO> voMap = new HashMap<>();
         List<IndexCategoryVO> result = new ArrayList<>();
         for (GoodsCategory c : gList) {
@@ -38,7 +119,6 @@ public class CategoryServiceImpl implements CategoryService {
             vo.setChildren(new ArrayList<>());
             voMap.put(c.getId(), vo);
         }
-
         for (IndexCategoryVO vo : voMap.values()) {
             Long pid = vo.getParentId();
             if (pid == 0) {
@@ -51,41 +131,5 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
         return result;
-    }
-
-    @Override
-    public void insert(CategoryDTO categoryInsertDTO) {
-        GoodsCategory category = new GoodsCategory();
-        BeanUtils.copyProperties(categoryInsertDTO, category);
-        categoryMapper.insert(category);
-    }
-
-    @Override
-    public void deleteBatch(List<Long> ids) {
-        categoryMapper.deleteBatch(ids);
-    }
-
-    @Override
-    public void update(CategoryDTO categoryDTO) {
-        GoodsCategory category =categoryMapper.getById(categoryDTO.getId());
-        if(category==null){
-            throw new CategoryNotExistException(MessageConstant.CATEGORY_NOT_EXIST + "，分类ID：" + categoryDTO.getId() + "，操作用户ID：" + TLUtils.getUserId());
-        }
-        BeanUtils.copyProperties(categoryDTO, category);
-        categoryMapper.update(category);
-    }
-
-    @Override
-    public GoodsCategory getById(Long id) {
-        GoodsCategory category = categoryMapper.getById(id);
-        if(category==null){
-            throw new CategoryNotExistException(MessageConstant.CATEGORY_NOT_EXIST + "，分类ID：" + id + "，操作用户ID：" + TLUtils.getUserId());
-        }
-        return category;
-    }
-
-    @Override
-    public List<GoodsCategory> getAll() {
-        return categoryMapper.getAll();
     }
 }

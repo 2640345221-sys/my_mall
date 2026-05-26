@@ -29,6 +29,7 @@ public class RedisCacheConfig {
         redisCacheConfigurationMap.put("newCache", defaultConfig.entryTtl(Duration.ofDays(1)));
         redisCacheConfigurationMap.put("popularCache", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         redisCacheConfigurationMap.put("recommendCache", defaultConfig.entryTtl(Duration.ofHours(6)));
+        redisCacheConfigurationMap.put("categoryCache", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(redisCacheConfigurationMap).build();

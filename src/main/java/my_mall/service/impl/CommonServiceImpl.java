@@ -80,7 +80,7 @@ public class CommonServiceImpl implements CommonService {
 
             indexConfigMapper.deleteByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
 
-            List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10); // 新增 Mapper 方法
+            List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10);
 
             if (hotGoodsIds.isEmpty()) {
                 log.info("没有找到热销商品");
@@ -115,13 +115,12 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
     public void resetRecommendGoods() {
-        //暂定为与推荐商品一致
         try {
             log.info("开始重新设置推荐商品");
 
             indexConfigMapper.deleteByType(IndexConfigTypeEnum.RECOMMEND_GOODS.getValue());
 
-            List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10); // 新增 Mapper 方法
+            List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10);
 
             if (hotGoodsIds.isEmpty()) {
                 log.info("没有找到推荐商品");

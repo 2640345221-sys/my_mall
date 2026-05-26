@@ -25,7 +25,6 @@ public class JSONDataUtils {
         if (filtered.length == 0) {
             return "【参数包含request/response/file等，无法记录】";
         }
-        // 如果只有一个参数，直接序列化该参数；多个参数则序列化为数组
         Object toSerialize = filtered.length == 1 ? filtered[0] : filtered;
         return objectMapper.writeValueAsString(toSerialize);
     }

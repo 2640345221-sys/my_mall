@@ -66,7 +66,6 @@ public class OperationFillAspect {
         Object finalValue = value;
 
         if (value != null && !fieldType.isAssignableFrom(value.getClass())) {
-            // 类型转换
             if (fieldType == Integer.class && value instanceof Long) {
                 finalValue = ((Long) value).intValue();
             } else if (fieldType == Long.class && value instanceof Integer) {

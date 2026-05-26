@@ -52,7 +52,6 @@ public class UserServiceImpl  implements UserService {
     @SneakyThrows
     @Override
     public void register(LoginDTO loginDTO) {
-        //随机生成一个用户名，避免与数据库已有用户冲突
         String nickName = "user" + System.currentTimeMillis();
         while (userMapper.getByNickName(nickName)!=null) {
             nickName = "user" + System.currentTimeMillis() + (int)(Math.random() * 100);

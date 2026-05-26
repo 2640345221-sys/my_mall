@@ -71,7 +71,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void save(OrderDTO orderDTO) {
-        //获取地址和购物车数据
         Long addressId = orderDTO.getAddressId();
         List<Long> cartItemIds = orderDTO.getCartItemIds();
         Long userId = TLUtils.getUserId();
@@ -79,7 +78,6 @@ public class OrderServiceImpl implements OrderService {
         if(userAddress==null||!userAddress.getUserId().equals(userId)){
             throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST + "，地址ID：" + addressId + "，操作用户ID：" + userId);
         }
-        //连接查询，将cart和goods关联，同时校验购物车项是否属于当前用户
         List<OrderCartDTO> cartList=shoppingCartMapper.getWithGoods(cartItemIds, userId);
         if(cartList==null|| cartList.isEmpty()){
             throw new CartItemNotExistException(MessageConstant.CART_EMPTY + "，购物车项ID：" + cartItemIds + "，操作用户ID：" + userId);
@@ -105,7 +103,6 @@ public class OrderServiceImpl implements OrderService {
 
         goodsMapper.deductStock(list);
 
-        //从上述数据总结出order
         Order order = new Order();
         order.setUserId(userId);
         order.setTotalPrice(totalPrice);
