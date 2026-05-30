@@ -23,7 +23,9 @@
       "Bash(redis-cli GET *)",
       "Bash(redis-cli SET *)",
       "Bash(redis-cli KEYS *)",
-      "Bash(redis-cli TYPE \"seckill:stock:7\")"
+      "Bash(redis-cli TYPE \"seckill:stock:7\")",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
