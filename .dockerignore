@@ -1,4 +1,5 @@
 application-dev.yml
+src/main/resources/application-dev.yml
 .env
 *.md
 target/
