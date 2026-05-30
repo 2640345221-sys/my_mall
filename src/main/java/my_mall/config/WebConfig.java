@@ -39,8 +39,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        log.info("开始设置静态资源映射...");
-        registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
@@ -49,6 +47,6 @@ public class WebConfig implements WebMvcConfigurer {
         log.info("拓展消息转换器");
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(objectMapper);
-        converters.add(0, converter);
+        converters.add(1, converter);
     }
 }

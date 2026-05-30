@@ -8,8 +8,8 @@ import lombok.*;
 @ToString
 @Builder
 public class GoodsPageDTO {
-    private Integer pageNumber;
-    private Integer pageSize;
+    private Integer pageNumber = 1;
+    private Integer pageSize = 10;
     private Integer sellStatus;
     private String goodsName;
 }

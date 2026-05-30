@@ -15,7 +15,7 @@ import my_mall.mapper.GoodsMapper;
 import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.result.PageResult;
 import my_mall.service.SeckillGoodsService;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -29,8 +29,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
     private SeckillGoodsMapper seckillGoodsMapper;
     @Resource
     private GoodsMapper goodsMapper;
-    @Resource
-    private RedisTemplate redisTemplate;
+    @Resource(name = "stringRedisTemplate")
+    private StringRedisTemplate redisTemplate;
 
 
     @PostConstruct
@@ -39,7 +39,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         for (SeckillGoods goods : activeList) {
             String stockKey = "seckill:stock:" + goods.getId();
             int stockInt=goods.getStockCount().intValue();
-            redisTemplate.opsForValue().set(stockKey, stockInt, Duration.ofHours(2));
+            redisTemplate.opsForValue().set(stockKey, String.valueOf(stockInt), Duration.ofHours(2));
             log.info("预热秒杀商品库存，ID: {}, 库存: {}", goods.getId(), goods.getStockCount());
         }
     }
@@ -64,6 +64,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         }
         seckillGoods.setStatus(1);
         seckillGoodsMapper.insert(seckillGoods);
+        redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount()), Duration.ofHours(2));
         log.info("新增秒杀商品成功，ID：{}，商品ID：{}", seckillGoods.getId(), seckillGoods.getGoodsId());
     }
 
@@ -85,6 +86,9 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             throw new SeckillException(MessageConstant.SECKILL_TIME_INVALID);
         }
         seckillGoodsMapper.update(seckillGoods);
+        if (seckillGoods.getStockCount() != null && !seckillGoods.getStockCount().equals(existing.getStockCount())) {
+            redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount()), Duration.ofHours(2));
+        }
         log.info("更新秒杀商品成功，ID：{}", seckillGoods.getId());
     }
 
@@ -96,6 +100,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST + "，ID：" + id);
         }
         seckillGoodsMapper.deleteById(id);
+        redisTemplate.delete("seckill:stock:" + id);
         log.info("删除秒杀商品成功，ID：{}", id);
     }
 
@@ -127,6 +132,11 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST + "，ID：" + id);
         }
         seckillGoodsMapper.updateStatus(id, status);
+        if (status == 1) {
+            redisTemplate.opsForValue().set("seckill:stock:" + id, String.valueOf(existing.getStockCount()), Duration.ofHours(2));
+        } else {
+            redisTemplate.delete("seckill:stock:" + id);
+        }
         log.info("修改秒杀商品状态成功，ID：{}，新状态：{}", id, status);
     }
 }

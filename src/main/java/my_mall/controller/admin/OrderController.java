@@ -41,8 +41,8 @@ public class OrderController {
         return Result.success(orderDetailVO);
     }
 
-    @Operation(summary = "确认收货")
-    @OperationLog(module = "管理端订单模块", type = "更新", description = "确认收货",
+    @Operation(summary = "配货完成")
+    @OperationLog(module = "管理端订单模块", type = "更新", description = "配货完成",
             recordParams = true, recordResult = true)
     @PutMapping("/checkDone")
     public Result checkDone(@RequestBody List<Long> ids) {

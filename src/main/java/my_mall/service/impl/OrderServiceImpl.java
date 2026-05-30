@@ -246,7 +246,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         for (Order order : orders) {
-            if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PAID.getStatus())) {
+            if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PACKAGED.getStatus())) {
                 throw new BaseException("订单" + order.getOrderNo() + MessageConstant.ORDER_CANNOT_CHECKOUT);
             }
         }

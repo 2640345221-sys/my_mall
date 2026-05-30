@@ -40,7 +40,9 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public PageResult search(GoodsPageSearchDTO goodsPageSearchDTO) {
-        PageHelper.startPage(goodsPageSearchDTO.getPageNumber(), goodsPageSearchDTO.getPageSize());
+        int pageNum = goodsPageSearchDTO.getPageNumber() != null ? goodsPageSearchDTO.getPageNumber() : 1;
+        int pageSize = goodsPageSearchDTO.getPageSize() != null ? goodsPageSearchDTO.getPageSize() : 10;
+        PageHelper.startPage(pageNum, pageSize);
         Page<Goods> goods = goodsMapper.getPage(goodsPageSearchDTO);
         PageResult pageResult = new PageResult();
         pageResult.setTotal(goods.getTotal());

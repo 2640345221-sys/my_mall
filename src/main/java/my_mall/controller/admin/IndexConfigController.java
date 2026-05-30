@@ -11,8 +11,6 @@ import my_mall.entity.po.IndexConfig;
 import my_mall.result.PageResult;
 import my_mall.result.Result;
 import my_mall.service.IndexConfigService;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,7 +47,6 @@ public class IndexConfigController {
             recordParams = true,recordResult = true)
     public Result deleteIndexConfigById(@RequestParam List<Long> ids) {
         indexConfigService.delete(ids);
-        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 
@@ -59,8 +56,7 @@ public class IndexConfigController {
             recordParams = true,recordResult = true)
     public Result updateIndexConfig(@RequestBody IndexConfigDTO indexConfigDTO) {
         indexConfigService.update(indexConfigDTO);
-        indexConfigService.resetIndexConfig();
-        return  Result.success();
+        return Result.success();
     }
 
     @Operation(summary = "新增首页配置")
@@ -69,7 +65,6 @@ public class IndexConfigController {
             recordParams = true,recordResult = true)
     public Result addIndexConfig(@RequestBody IndexConfigDTO indexConfigDTO) {
         indexConfigService.insert(indexConfigDTO);
-        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 

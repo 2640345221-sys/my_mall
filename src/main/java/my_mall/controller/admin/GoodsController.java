@@ -35,8 +35,8 @@ public class GoodsController {
     @OperationLog(module = "管理端商品模块",type = "插入",description = "新增商品",
             recordParams = true,recordResult = true)
     public Result insert(@RequestBody Goods goods){
-        indexConfigService.resetIndexConfig();
         goodsService.insert(goods);
+        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 
@@ -63,8 +63,8 @@ public class GoodsController {
     @OperationLog(module = "管理端商品模块",type = "更新",description = "修改商品上架状态",
             recordParams = true,recordResult = true)
     public Result updateSellStatus(@PathVariable Integer sellStatus,@RequestBody List<Long> ids){
-        indexConfigService.resetIndexConfig();
         goodsService.updateStatus(sellStatus,ids);
+        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 
@@ -73,8 +73,8 @@ public class GoodsController {
     @OperationLog(module = "管理端商品模块",type = "更新",description = "更新商品信息",
             recordParams = true,recordResult = true)
     public Result updateGoods(@RequestBody Goods goods){
-        indexConfigService.resetIndexConfig();
         goodsService.updateGoods(goods);
+        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 
@@ -83,8 +83,8 @@ public class GoodsController {
     @OperationLog(module = "管理端商品模块",type = "删除",description = "删除指定ID商品",
             recordParams = true,recordResult = true)
     public Result deleteGoods(@PathVariable Long id){
-        indexConfigService.resetIndexConfig();
         goodsService.deleteGoods(id);
+        indexConfigService.resetIndexConfig();
         return Result.success();
     }
 }

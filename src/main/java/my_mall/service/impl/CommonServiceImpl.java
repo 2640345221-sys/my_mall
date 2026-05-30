@@ -81,6 +81,9 @@ public class CommonServiceImpl implements CommonService {
             indexConfigMapper.deleteByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
 
             List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10);
+            if (hotGoodsIds.isEmpty()) {
+                hotGoodsIds = goodsMapper.getLatestGoods(10).stream().map(Goods::getId).collect(Collectors.toList());
+            }
 
             if (hotGoodsIds.isEmpty()) {
                 log.info("没有找到热销商品");
@@ -121,6 +124,9 @@ public class CommonServiceImpl implements CommonService {
             indexConfigMapper.deleteByType(IndexConfigTypeEnum.RECOMMEND_GOODS.getValue());
 
             List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10);
+            if (hotGoodsIds.isEmpty()) {
+                hotGoodsIds = goodsMapper.getLatestGoods(10).stream().map(Goods::getId).collect(Collectors.toList());
+            }
 
             if (hotGoodsIds.isEmpty()) {
                 log.info("没有找到推荐商品");

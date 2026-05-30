@@ -1,5 +1,6 @@
 package my_mall.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,7 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     @Override
     public void delete(List<Long> ids) {
         indexConfigMapper.deleteBatch(ids);
+        resetIndexConfig();
     }
 
     @Override
@@ -74,6 +76,7 @@ public class IndexConfigServiceImpl implements IndexConfigService {
         }
         BeanUtils.copyProperties(indexConfigDTO,indexConfig);
         indexConfigMapper.update(indexConfig);
+        resetIndexConfig();
     }
 
     @Override
@@ -81,6 +84,7 @@ public class IndexConfigServiceImpl implements IndexConfigService {
         IndexConfig indexConfig=new IndexConfig();
         BeanUtils.copyProperties(indexConfigDTO,indexConfig);
         indexConfigMapper.insert(indexConfig);
+        resetIndexConfig();
     }
 
     @Override
@@ -104,7 +108,7 @@ public class IndexConfigServiceImpl implements IndexConfigService {
 
         List<IndexConfig> list = indexConfigMapper.getByType(IndexConfigTypeEnum.NEW_GOODS.getValue());
         List<Long> ids = list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
-        List<Goods> result = goodsMapper.getByIdBatch(ids);
+        List<Goods> result = ids.isEmpty() ? new ArrayList<>() : goodsMapper.getByIdBatch(ids);
 
         goodsCache.put(l1Key, result);
         if (l2Cache != null) {
@@ -136,7 +140,7 @@ public class IndexConfigServiceImpl implements IndexConfigService {
 
         List<IndexConfig> list = indexConfigMapper.getByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
         List<Long> ids = list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
-        List<Goods> result = goodsMapper.getByIdBatch(ids);
+        List<Goods> result = ids.isEmpty() ? new ArrayList<>() : goodsMapper.getByIdBatch(ids);
 
         goodsCache.put(l1Key, result);
         if (l2Cache != null) {
@@ -167,7 +171,7 @@ public class IndexConfigServiceImpl implements IndexConfigService {
 
         List<IndexConfig> list = indexConfigMapper.getByType(IndexConfigTypeEnum.RECOMMEND_GOODS.getValue());
         List<Long> ids = list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
-        List<Goods> result = goodsMapper.getByIdBatch(ids);
+        List<Goods> result = ids.isEmpty() ? new ArrayList<>() : goodsMapper.getByIdBatch(ids);
 
         goodsCache.put(l1Key, result);
         if (l2Cache != null) {

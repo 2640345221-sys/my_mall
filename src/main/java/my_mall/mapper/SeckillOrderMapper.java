@@ -23,5 +23,5 @@ public interface SeckillOrderMapper {
 
     Page<SeckillOrder> pageForUser(@Param("pageDTO") PageDTO pageDTO, @Param("userId") Long userId);
 
-    SeckillOrder getByUserIdAndGoodsId(Long userId, Long seckillGoodsId);
+    SeckillOrder getByUserIdAndGoodsId(Long userId, Long goodsId);
 }

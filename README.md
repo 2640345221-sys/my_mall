@@ -1,184 +1,127 @@
 # MyMall 电商平台
 
-一个基于 Spring Boot 3 的后端电商系统，涵盖商品管理、购物车、订单流程、高并发秒杀等核心业务场景。
+Spring Boot 单体电商系统，用户端 + 管理端，涵盖商品管理、购物车、订单流程、高并发秒杀。
 
 ## 技术栈
 
-| 技术 | 说明 |
+| 技术 | 用途 |
 |------|------|
-| Spring Boot 3.4 + Java 17 | 核心框架 |
-| SpringDoc OpenAPI | RESTful API 文档 |
+| Spring Boot 4.0 + Java 17 | 核心框架 |
 | MyBatis + PageHelper | ORM + 分页 |
 | MySQL 8.0 | 关系型数据库 |
-| Redis + Redisson | 缓存 / 秒杀库存 / 分布式锁 |
-| JWT | 双端身份认证（用户端 / 管理端） |
-| Spring AOP | 操作日志记录、字段自动填充 |
-| 阿里云 OSS | 图片文件存储 |
-
-## 项目亮点
-
-### 1. 高并发秒杀系统
-- **Redis 预减库存**：将库存数据预热到 Redis，避免每次请求都打到数据库
-- **Redisson 分布式锁**：保证多实例部署下的并发安全，防止超卖
-- **双重检查机制**：获取锁前后两次校验库存，确保数据一致性
-- **防重复秒杀**：通过 Redis Key 记录用户秒杀状态，同一用户同一商品只能秒杀一次
-- **异常回滚**：下单失败时自动恢复 Redis 库存，保证库存数据准确
-
-### 2. 安全认证体系
-- **双端分离认证**：用户端和管理端使用独立的 JWT 密钥和 Token 体系
-- **拦截器鉴权**：自定义 `HandlerInterceptor` 实现 Token 校验、用户身份提取
-- **AOP 操作日志**：通过自定义注解 + AOP 切面，自动记录关键操作日志
-
-### 3. 架构设计
-- **三层架构**：Controller → Service → Mapper 职责清晰
-- **DTO / VO 分离**：请求参数用 DTO，返回数据用 VO，避免实体类暴露
-- **全局异常处理**：`@RestControllerAdvice` 统一捕获业务异常，返回标准化响应
-- **字段自动填充**：通过 AOP 自动填充 `createTime`、`updateTime`、`createUser` 等公共字段
-
-## 核心功能
-
-### 用户端
-- 用户注册 / 登录（JWT 认证）
-- 首页展示（轮播图、热销商品、新品上线、推荐商品）
-- 商品浏览 / 搜索（分类筛选、关键词搜索、分页）
-- 商品详情（图片、价格、库存、分类信息）
-- 购物车（添加、修改数量、删除、查询）
-- 收货地址管理（增删改查）
-- 下单支付（订单创建、支付回调模拟）
-- 订单管理（查看列表、详情、取消）
-- **秒杀**（Redis 预减库存 + Redisson 分布式锁防超卖）
-
-### 管理端
-- 管理员登录（独立认证体系）
-- 商品管理（增删改查、上下架、图片上传 OSS）
-- 分类管理（多级分类、启用/禁用）
-- 轮播图管理（增删改查、排序）
-- 首页配置（热销/新品/推荐商品配置）
-- 用户管理（查看列表、启用/禁用）
-- 订单管理（分页查询、发货、关闭）
-- 秒杀商品管理（增删改查、状态控制）
-
-## 秒杀架构
-
-```
-用户请求
-  │
-  ▼
-Redis 预检查库存 ───── 库存不足 → 返回 -1
-  │
-  ▼
-Redis 防重复检查 ───── 已秒杀过 → 返回 -2
-  │
-  ▼
-Redisson 分布式锁（tryLock 0s 等待，10s 超时）
-  │
-  ▼
-双重检查库存（防止并发窗口期超卖）
-  │
-  ▼
-Redis decrement 扣减库存（若失败则恢复并返回-1）
-  │
-  ▼
-创建订单 + 扣减数据库库存（乐观锁，如果数据库商品不足则返回-1，否则返回1）
-  │
-  ▼
-返回结果：1=成功 / -1=库存不足 / -2=重复秒杀 / -3=系统错误
-```
-## 压力测试
-
-使用 JMeter 对秒杀接口进行高并发压测，验证分布式锁、库存扣减的正确性。
-
-### 测试环境
-- 服务器：本地部署
-- JMeter 线程数：300
-- Ramp-up 时间：2秒
-- 循环次数：1
-- 秒杀商品初始库存：100
-
-### 测试结果
-
-| 指标 | 数值          |
-|------|-------------|
-| 总请求数 | 300         |
-| HTTP 200 成功数 | 100         |
-| 业务成功（订单创建） | 100         |
-| 库存不足（-1） | 90          |
-| 平均响应时间 | 245 ms      |
-| 吞吐量 | 约 400 req/s |
-| 超卖发生 | 无           |
-
-### 结果验证
-- 数据库订单表记录数 = 100
-- 秒杀商品库存最终 = 0
-- Redis 剩余库存 = 0
-
-### 压测结论
-分布式锁 + Redis 预减库存方案在高并发下能有效防止超卖，系统吞吐量满足日常秒杀场景需求。
-
-![压力测试结果](https://liuyijia-jiava.oss-cn-beijing.aliyuncs.com/%E5%8E%8B%E5%8A%9B%E6%B5%8B%E8%AF%95%E7%BB%93%E6%9E%9C.png)
-
-### 防超卖策略
-| 策略 | 作用 |
-|------|------|
-| Redis 预减库存 | 高性能库存检查，避免数据库压力 |
-| Redisson 分布式锁 | 保证多实例并发安全 |
-| 双重检查 | 获取锁后再次验证，防止并发窗口 |
-| 异常回滚 | 失败时恢复 Redis 库存 |
-| 用户去重 Key | 防止同一用户重复秒杀 |
+| Redis + Caffeine | 两级缓存（L1 本地 / L2 远程） |
+| Redis + Lua | 秒杀库存原子扣减 |
+| RabbitMQ | 秒杀异步削峰 |
+| Hutool IdUtil | 雪花算法订单号 |
+| JWT (jjwt) | 双端身份认证 |
+| Spring AOP | 操作日志、字段自动填充 |
+| 阿里云 OSS | 文件上传 |
+| SpringDoc OpenAPI 3.0 | API 文档 |
 
 ## 项目结构
 
 ```
 my_mall/
 ├── controller/
-│   ├── admin/          # 管理端接口
-│   ├── common/         # 公共接口
-│   └── user/           # 用户端接口
-├── service/            # 业务逻辑层
-├── mapper/             # MyBatis 数据访问层
+│   ├── admin/          # 管理端
+│   ├── common/         # 公共（文件上传）
+│   └── user/           # 用户端
+├── consumer/           # RabbitMQ 消费者
+├── service/            # 业务逻辑
+├── mapper/             # MyBatis 数据访问
 ├── entity/
-│   ├── po/             # 持久化对象（对应数据库表）
-│   ├── dto/            # 数据传输对象（接收请求参数）
-│   └── vo/             # 视图对象（返回给前端）
-├── interceptor/        # JWT Token 拦截器
-├── aspect/             # AOP 切面（操作日志、字段填充）
-├── config/             # 配置类（Redis、OSS、Swagger 等）
-├── exception/          # 自定义业务异常
-├── handler/            # 全局异常处理器
-├── task/               # 定时任务（超时订单处理等）
-└── utils/              # 工具类（JWT、OSS、JSON 等）
+│   ├── po/             # 持久化对象
+│   ├── dto/            # 数据传输对象
+│   └── vo/             # 视图对象
+├── config/             # 配置
+├── interceptor/        # JWT 拦截器
+├── aspect/             # AOP 切面
+├── exception/          # 自定义异常
+├── handler/            # 全局异常处理
+├── task/               # 定时任务
+├── utils/              # 工具类
+└── resources/
+    ├── mapper/         # MyBatis XML
+    ├── lua/            # Lua 脚本（秒杀）
+    └── application*.yml
 ```
 
-## 数据库设计
+## 核心功能
 
-| 表名 | 说明 |
-|------|------|
-| `user` | 用户表 |
-| `admin` | 管理员表 |
-| `goods` | 商品表 |
-| `goods_category` | 商品分类表 |
-| `shopping_cart` | 购物车表 |
-| `order` | 订单表 |
-| `order_item` | 订单项表 |
-| `order_address` | 订单地址表 |
-| `index_config` | 首页配置表 |
-| `user_address` | 用户地址表 |
-| `seckill_goods` | 秒杀商品表 |
-| `seckill_order` | 秒杀订单表 |
+### 用户端
+- 注册 / 登录（JWT）
+- 首页（新品 / 热销 / 推荐）
+- 商品浏览 / 搜索
+- 购物车
+- 收货地址
+- 下单 / 支付 / 取消 / 确认收货
+- 限时秒杀
 
+### 管理端
+- 商品管理（OSS 图片上传）
+- 分类管理（三级分类树）
+- 首页配置（新品 / 热销 / 推荐，手动刷新缓存）
+- 订单管理（配货 / 出库 / 关闭）
+- 用户管理（禁用 / 启用）
+- 秒杀商品管理
 
-### 环境要求
-- JDK 17+
-- Maven 3.6+
-- MySQL 8.0+
-- Redis
+## 秒杀架构
 
-### 启动步骤
-
-1. **创建数据库**，导入 SQL 脚本(src/main/resource/my_mall.sql)
-2. **修改配置** `application.yml` 中的数据库、Redis、OSS 信息
-3. **访问 API 文档**
 ```
-http://localhost:8080/swagger-ui.html
+用户请求
+  ↓
+Controller → RabbitMQ 异步入队（削峰）
+  ↓
+SeckillRequestConsumer: Lua 脚本原子扣减 Redis 库存
+  → -1: 库存不足  → Redis 失败标记  → 前端轮询返回失败
+  → -2: 重复秒杀  → 直接返回
+  → ≥0: 成功      → 写 DB + RabbitMQ 转发
+  ↓
+SeckillOrderConsumer: 创建订单
+  ↓
+前端轮询 GET /result → 查 Redis 失败标记 + DB 订单
 ```
 
+关键点：
+- **Lua 脚本**一次网络往返完成"检查库存 + 去重 + 扣减"，原子执行
+- **Lazy Queue**消息直接落盘，不会 OOM
+- **失败标记**写入 Redis（带 TTL），前端 1.5s 轮询获取明确结果
+
+## 缓存策略
+
+| 数据 | Caffeine (L1) | Redis (L2) | 失效策略 |
+|------|:---:|:---:|------|
+| 新品商品 | 10min | 1天 | 清空 + 预热 |
+| 热销商品 | 10min | 30min | 清空 + 预热 |
+| 推荐商品 | 10min | 6h | 清空 + 预热 |
+| 分类树 | 30min | 30min | 增删改全清 |
+| 秒杀库存 | ❌ | 2h | 增删改同步 |
+
+> 秒杀不走 Caffeine：多实例部署时本地缓存会导致超卖。
+
+## 前端
+
+独立 Vue3 项目 `my_mall_vue3`：
+- Vue 3 + Pinia + Element Plus
+- 用户端（移动端风格） + 管理端（后台风格）
+- Token 自动携带、秒杀下单轮询、价格格式化
+
+## 快速启动
+
+1. 创建数据库，导入 `my_mall.sql`
+2. 启动 MySQL / Redis / RabbitMQ
+3. 配置 `application-dev.yml`（数据库密码等）
+4. 启动后端
+5. 启动前端：`cd my_mall_vue3 && npm i && npm run dev`
+
+API 文档：`http://localhost:8080/swagger-ui/index.html`
+
+## Docker 部署
+
+```
+docker compose up
+```
+
+- 密钥通过 `.env` 注入，不进镜像
+- `application-docker.yml` 用 `${}` 占位符
+- `.dockerignore` 排除敏感文件

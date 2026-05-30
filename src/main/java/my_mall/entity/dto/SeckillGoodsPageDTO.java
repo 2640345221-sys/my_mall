@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @ToString
 @Builder
 public class SeckillGoodsPageDTO {
-    private Integer pageNumber;
-    private Integer pageSize;
+    private Integer pageNumber = 1;
+    private Integer pageSize = 10;
     private Integer status;
     private String goodsName;
     private LocalDateTime startTime;

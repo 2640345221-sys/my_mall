@@ -13,7 +13,17 @@
       "Bash(dir \"C:\\\\ProgramData\\\\RabbitMQ\")",
       "Bash(\"E:/rabbitmq/rabbitmq_server-4.3.0/sbin/rabbitmq-server.bat\")",
       "Bash(\"E:/rabbitmq/rabbitmq_server-4.3.0/sbin/rabbitmqctl.bat\" status *)",
-      "Bash(cmd *)"
+      "Bash(cmd *)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(mysql *)",
+      "Bash(\"C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe\" -u root -p114514 my_mall -e \"SELECT COUNT\\(*\\) as total FROM index_config;\")",
+      "Bash(\"E:/mysql/bin/mysql\" -u root -p114514 my_mall -e \"SELECT COUNT\\(*\\) as total FROM index_config;\")",
+      "Bash(C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe *)",
+      "Bash(redis-cli GET *)",
+      "Bash(redis-cli SET *)",
+      "Bash(redis-cli KEYS *)",
+      "Bash(redis-cli TYPE \"seckill:stock:7\")"
     ]
   }
 }

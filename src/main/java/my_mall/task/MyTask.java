@@ -7,7 +7,7 @@ import java.util.List;
 import my_mall.entity.po.SeckillGoods;
 import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.service.IndexConfigService;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +29,8 @@ public class MyTask {
     private IndexConfigService indexConfigService;
     @Resource
     private SeckillGoodsMapper seckillGoodsMapper;
-    @Resource
-    private RedisTemplate redisTemplate;
+    @Resource(name = "stringRedisTemplate")
+    private StringRedisTemplate redisTemplate;
 
     @Scheduled(cron = "0 */30 * * * ?")
     @Transactional
@@ -87,7 +87,7 @@ public class MyTask {
         for (SeckillGoods goods : activeList) {
             String stockKey = "seckill:stock:" + goods.getId();
             int stockInt=goods.getStockCount().intValue();
-            redisTemplate.opsForValue().set(stockKey, stockInt, Duration.ofHours(2));
+            redisTemplate.opsForValue().set(stockKey, String.valueOf(stockInt), Duration.ofHours(2));
             log.info("预热秒杀商品库存，ID: {}, 库存: {}", goods.getId(), goods.getStockCount());
         }
     }

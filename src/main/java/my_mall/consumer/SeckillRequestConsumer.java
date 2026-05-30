@@ -9,24 +9,30 @@ import my_mall.entity.po.SeckillOrder;
 import my_mall.exception.SeckillException;
 import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.mapper.SeckillOrderMapper;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 @Component
 @Slf4j
 public class SeckillRequestConsumer {
 
+    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
+
+    static {
+        SECKILL_SCRIPT = new DefaultRedisScript<>();
+        SECKILL_SCRIPT.setLocation(new ClassPathResource("lua/seckill.lua"));
+        SECKILL_SCRIPT.setResultType(Long.class);
+    }
+
     @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate redisTemplate;
-    @Resource
-    private RedissonClient redissonClient;
     @Resource
     private RabbitTemplate rabbitTemplate;
     @Resource
@@ -43,42 +49,31 @@ public class SeckillRequestConsumer {
 
         log.info("处理秒杀请求: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
 
-        String stockStr = redisTemplate.opsForValue().get(stockKey);
-        if (stockStr == null || Integer.parseInt(stockStr) <= 0) {
-            log.warn("库存不足: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+        Long result = redisTemplate.execute(
+                SECKILL_SCRIPT,
+                List.of(stockKey, userKey),
+                String.valueOf(message.getCount()),
+                String.valueOf(Duration.ofHours(1).getSeconds())
+        );
+
+        if (result == null) {
+            log.error("Lua 脚本执行异常: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+            redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
             return;
         }
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(userKey))) {
+
+        if (result == -1) {
+            log.warn("库存不足: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+            redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
+            return;
+        }
+
+        if (result == -2) {
             log.warn("重复秒杀: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
             return;
         }
 
-        RLock lock = redissonClient.getLock("seckill:lock:" + seckillGoodsId);
-        boolean locked = false;
         try {
-            locked = lock.tryLock(0, 10, TimeUnit.SECONDS);
-            if (!locked) {
-                log.warn("获取锁失败: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
-                return;
-            }
-            String currentStockStr = redisTemplate.opsForValue().get(stockKey);
-            if (currentStockStr == null || Integer.parseInt(currentStockStr) <= 0) {
-                log.warn("双重检查库存不足: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
-                return;
-            }
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(userKey))) {
-                log.warn("双重检查重复秒杀: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
-                return;
-            }
-
-            Long newStock = redisTemplate.opsForValue().decrement(stockKey, message.getCount());
-            if (newStock < 0) {
-                redisTemplate.opsForValue().increment(stockKey, message.getCount());
-                log.warn("扣减库存不足: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
-                return;
-            }
-            redisTemplate.opsForValue().set(userKey, "1", Duration.ofHours(1));
-
             int rows = seckillGoodsMapper.decreaseStock(seckillGoodsId, message.getCount());
             if (rows == 0) {
                 throw new SeckillException("库存不足");
@@ -99,10 +94,6 @@ public class SeckillRequestConsumer {
             redisTemplate.opsForValue().increment(stockKey);
             redisTemplate.delete(userKey);
             redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
-        } finally {
-            if (locked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
         }
     }
 }

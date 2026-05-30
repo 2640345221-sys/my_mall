@@ -8,6 +8,6 @@ import lombok.*;
 @ToString
 @Builder
 public class PageDTO {
-    private Integer pageNumber;
-    private Integer pageSize;
+    private Integer pageNumber = 1;
+    private Integer pageSize = 10;
 }
