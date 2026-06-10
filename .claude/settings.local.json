@@ -25,7 +25,10 @@
       "Bash(redis-cli KEYS *)",
       "Bash(redis-cli TYPE \"seckill:stock:7\")",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Read(//e/mall/my_mall_assistant/**)",
+      "Read(//e/mall/**)",
+      "Bash(python *)"
     ]
   }
 }
