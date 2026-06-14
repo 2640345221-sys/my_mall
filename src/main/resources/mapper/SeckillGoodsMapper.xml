@@ -64,4 +64,7 @@
         UPDATE my_mall.seckill_goods SET status = #{status} WHERE id = #{id}
     </update>
 
+    <delete id="deleteByGoodsId">
+        DELETE FROM my_mall.seckill_goods WHERE goods_id = #{goodsId}
+    </delete>
 </mapper>

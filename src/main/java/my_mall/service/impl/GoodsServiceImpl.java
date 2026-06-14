@@ -12,6 +12,9 @@ import my_mall.entity.vo.GoodsDetailVO;
 import my_mall.exception.GoodsNotExistException;
 import my_mall.mapper.CategoryMapper;
 import my_mall.mapper.GoodsMapper;
+import my_mall.mapper.IndexConfigMapper;
+import my_mall.mapper.SeckillGoodsMapper;
+import my_mall.mapper.ShoppingCartMapper;
 import my_mall.result.PageResult;
 import my_mall.service.GoodsService;
 import my_mall.utils.TLUtils;
@@ -29,6 +32,12 @@ public class GoodsServiceImpl implements GoodsService {
     private GoodsMapper goodsMapper;
     @Resource
     private CategoryMapper categoryMapper;
+    @Resource
+    private ShoppingCartMapper shoppingCartMapper;
+    @Resource
+    private IndexConfigMapper indexConfigMapper;
+    @Resource
+    private SeckillGoodsMapper seckillGoodsMapper;
     @Override
     public GoodsDetailVO getGoodsDetail(Long goodsId) {
         Goods goods = goodsMapper.getById(goodsId);
@@ -109,6 +118,9 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     @Transactional
     public void deleteGoods(Long id) {
+        shoppingCartMapper.deleteByGoodsId(id);
+        indexConfigMapper.deleteByGoodsId(id);
+        seckillGoodsMapper.deleteByGoodsId(id);
         goodsMapper.deleteBatch(id);
     }
 }

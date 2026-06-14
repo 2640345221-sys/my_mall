@@ -17,7 +17,9 @@ public interface SeckillGoodsMapper {
 
     void update(SeckillGoods seckillGoods);
 
-    void deleteById( Long id);
+    void deleteById(Long id);
+
+    void deleteByGoodsId(Long goodsId);
 
     SeckillGoods getById(Long id);
 

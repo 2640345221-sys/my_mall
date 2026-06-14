@@ -34,4 +34,6 @@ public interface ShoppingCartMapper {
     ShoppingCart getById(Long cartItemId);
 
     List<Long> selectTopSellingGoodsIds(Integer limit);
+
+    void deleteByGoodsId(Long goodsId);
 }

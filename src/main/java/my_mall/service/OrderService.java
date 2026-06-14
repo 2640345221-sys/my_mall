@@ -9,7 +9,7 @@ import my_mall.entity.vo.OrderDetailVO;
 import my_mall.result.PageResult;
 
 public interface OrderService {
-    void save(OrderDTO orderDTO);
+    String save(OrderDTO orderDTO);
 
     void cancel(String orderNo);
 

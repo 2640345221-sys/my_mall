@@ -15,6 +15,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.util.List;
@@ -41,6 +44,7 @@ public class SeckillRequestConsumer {
     private SeckillOrderMapper seckillOrderMapper;
 
     @RabbitListener(queues = RabbitMQConfig.SECKILL_REQUEST_QUEUE)
+    @Transactional(rollbackFor = Exception.class)
     public void handleSeckillRequest(SeckillMessage message) {
         Long userId = message.getUserId();
         Long seckillGoodsId = message.getSeckillGoodsId();
@@ -78,20 +82,28 @@ public class SeckillRequestConsumer {
             if (rows == 0) {
                 throw new SeckillException("库存不足");
             }
-            Long goodsId = seckillGoodsMapper.getById(seckillGoodsId).getGoodsId();
+            var seckillGoods = seckillGoodsMapper.getById(seckillGoodsId);
+            if (seckillGoods == null) {
+                throw new SeckillException("秒杀商品不存在");
+            }
             SeckillOrder seckillOrder = SeckillOrder.builder()
                     .userId(userId)
-                    .goodsId(goodsId)
+                    .goodsId(seckillGoods.getGoodsId())
                     .orderId(0L)
                     .status(JudgeConstant.ENABLE)
                     .build();
             seckillOrderMapper.insert(seckillOrder);
 
-            rabbitTemplate.convertAndSend(RabbitMQConfig.SECKILL_QUEUE, message);
-            log.info("秒杀请求处理成功: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    rabbitTemplate.convertAndSend(RabbitMQConfig.SECKILL_QUEUE, message);
+                    log.info("秒杀请求处理成功: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+                }
+            });
         } catch (Exception e) {
             log.error("秒杀处理异常: userId={}, seckillGoodsId={}", userId, seckillGoodsId, e);
-            redisTemplate.opsForValue().increment(stockKey);
+            redisTemplate.opsForValue().increment(stockKey, message.getCount());
             redisTemplate.delete(userKey);
             redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
         }

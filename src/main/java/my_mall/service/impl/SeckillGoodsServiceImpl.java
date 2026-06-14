@@ -64,7 +64,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         }
         seckillGoods.setStatus(1);
         seckillGoodsMapper.insert(seckillGoods);
-        redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount()), Duration.ofHours(2));
+        redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount().intValue()), Duration.ofHours(2));
         log.info("新增秒杀商品成功，ID：{}，商品ID：{}", seckillGoods.getId(), seckillGoods.getGoodsId());
     }
 
@@ -87,7 +87,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         }
         seckillGoodsMapper.update(seckillGoods);
         if (seckillGoods.getStockCount() != null && !seckillGoods.getStockCount().equals(existing.getStockCount())) {
-            redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount()), Duration.ofHours(2));
+            redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount().intValue()), Duration.ofHours(2));
         }
         log.info("更新秒杀商品成功，ID：{}", seckillGoods.getId());
     }
@@ -133,7 +133,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         }
         seckillGoodsMapper.updateStatus(id, status);
         if (status == 1) {
-            redisTemplate.opsForValue().set("seckill:stock:" + id, String.valueOf(existing.getStockCount()), Duration.ofHours(2));
+            redisTemplate.opsForValue().set("seckill:stock:" + id, String.valueOf(existing.getStockCount().intValue()), Duration.ofHours(2));
         } else {
             redisTemplate.delete("seckill:stock:" + id);
         }

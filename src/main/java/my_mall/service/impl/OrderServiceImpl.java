@@ -70,7 +70,7 @@ public class OrderServiceImpl implements OrderService {
     @SneakyThrows
     @Override
     @Transactional
-    public void save(OrderDTO orderDTO) {
+    public String save(OrderDTO orderDTO) {
         Long addressId = orderDTO.getAddressId();
         List<Long> cartItemIds = orderDTO.getCartItemIds();
         Long userId = TLUtils.getUserId();
@@ -128,6 +128,7 @@ public class OrderServiceImpl implements OrderService {
         orderAddressMapper.insert(orderAddress);
 
         shoppingCartMapper.deleteBatch(cartItemIds, userId);
+        return order.getOrderNo();
     }
 
     @SneakyThrows

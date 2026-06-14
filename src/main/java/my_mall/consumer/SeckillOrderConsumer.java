@@ -10,6 +10,7 @@ import my_mall.enums.OrderPayStatusEnum;
 import my_mall.enums.OrderPayTypeEnum;
 import my_mall.enums.OrderStatusEnum;
 import my_mall.exception.AddressNotExistException;
+import my_mall.exception.SeckillException;
 import my_mall.mapper.*;
 import my_mall.utils.IdGenerator;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -41,7 +42,15 @@ public class SeckillOrderConsumer {
     public void handleSeckillOrder(SeckillMessage message) {
         log.info("收到秒杀订单消息: userId={}, seckillGoodsId={}", message.getUserId(), message.getSeckillGoodsId());
 
+        UserAddress address = addressMapper.getAddressById(message.getAddressId());
+        if (address == null || !address.getUserId().equals(message.getUserId())) {
+            throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST);
+        }
+
         SeckillGoods seckillGoods = seckillGoodsMapper.getById(message.getSeckillGoodsId());
+        if (seckillGoods == null) {
+            throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
+        }
         Goods goods = goodsMapper.getById(seckillGoods.getGoodsId());
 
         Order order = Order.builder()
@@ -65,12 +74,13 @@ public class SeckillOrderConsumer {
                 .build();
         orderItemMapper.insert(orderItem);
 
-        UserAddress address = addressMapper.getAddressById(message.getAddressId());
-        if (address == null || !address.getUserId().equals(message.getUserId())) {
-            throw new AddressNotExistException(MessageConstant.ADDRESS_NOT_EXIST);
-        }
         OrderAddress orderAddress = new OrderAddress();
-        BeanUtils.copyProperties(address, orderAddress);
+        orderAddress.setUsername(address.getUsername());
+        orderAddress.setUserPhone(address.getUserPhone());
+        orderAddress.setProvince(address.getProvince());
+        orderAddress.setCity(address.getCity());
+        orderAddress.setRegion(address.getRegion());
+        orderAddress.setDetailAddress(address.getDetailAddress());
         orderAddress.setOrderId(order.getId());
         orderAddressMapper.insert(orderAddress);
 

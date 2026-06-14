@@ -74,4 +74,8 @@
         ORDER BY SUM(oi.count) DESC
         LIMIT #{limit}
     </select>
+
+    <delete id="deleteByGoodsId">
+        DELETE FROM my_mall.shopping_cart WHERE goods_id = #{goodsId}
+    </delete>
 </mapper>

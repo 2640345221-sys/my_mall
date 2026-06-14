@@ -20,35 +20,41 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if(!(handler instanceof HandlerMethod)){
+        if (!(handler instanceof HandlerMethod)) {
             return true;
         }
+
         TLUtils.remove();
-        String token=request.getHeader(jwtProperties.getAdminTokenName());
-        if (token == null || token.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":401,\"msg\":\"未登录\"}");
-            response.getWriter().flush();
-            return false;
-        }
-        try{
-            log.info("jwt校验token:{}",token);
-            Claims claims=JwtUtils.parseJwtToken(token,jwtProperties.getAdminSecretKey());
-            Long userId=Long.valueOf(claims.get("userId").toString());
-            if(TLUtils.getUserId()==null){
-                log.info("当前管理员id:{}",userId);
+
+        String token = request.getHeader(jwtProperties.getAdminTokenName());
+
+        boolean hasToken = false;
+        if (token != null && !token.isEmpty()) {
+            try {
+                Claims claims = JwtUtils.parseJwtToken(token, jwtProperties.getAdminSecretKey());
+                Long userId = Long.valueOf(claims.get("userId").toString());
                 TLUtils.setUserId(userId);
+                log.info("管理员id:{}", userId);
+                hasToken = true;
+            } catch (Exception e) {
+                log.error("JWT验证失败: {}", e.getMessage());
             }
-            return true;
-        }catch (Exception e){
-            log.error("JWT验证失败: {}", e.getMessage());
+        }
+
+        String method = request.getMethod();
+        if (!"GET".equalsIgnoreCase(method) && !hasToken) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":401,\"msg\":\"token无效\"}");
+            response.getWriter().write("{\"code\":401,\"msg\":\"请先登录\"}");
             response.getWriter().flush();
             return false;
         }
 
+        return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        TLUtils.remove();
     }
 }

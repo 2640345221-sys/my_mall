@@ -34,8 +34,8 @@ public class OrderController {
             recordParams = true, recordResult = true)
     @PostMapping("/saveOrder")
     public Result saveOrder(@RequestBody OrderDTO orderDTO) {
-        orderService.save(orderDTO);
-        return Result.success();
+        String orderNo = orderService.save(orderDTO);
+        return Result.success(orderNo);
     }
 
     @Operation(summary = "取消订单")
@@ -78,7 +78,7 @@ public class OrderController {
     @OperationLog(module = "用户订单模块", type = "更新", description = "支付成功回调",
             recordParams = true, recordResult = true)
     @PostMapping("/paySuccess")
-    public Result paySuccess(OrderPayDTO orderPayDTO) {
+    public Result paySuccess(@RequestBody OrderPayDTO orderPayDTO) {
         orderService.paySuccess(orderPayDTO);
         return Result.success();
     }

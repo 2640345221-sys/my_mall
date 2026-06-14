@@ -71,4 +71,8 @@
         where type = #{type}
         order by `rank` asc
     </select>
+
+    <delete id="deleteByGoodsId">
+        DELETE FROM my_mall.index_config WHERE goods_id = #{goodsId}
+    </delete>
 </mapper>

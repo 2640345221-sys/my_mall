@@ -32,4 +32,6 @@ public interface IndexConfigMapper {
     void deleteByType(Integer type);
     
     void insertBatch(List<IndexConfig> list);
+
+    void deleteByGoodsId(Long goodsId);
 }
