@@ -40,19 +40,4 @@
                  )
     </insert>
 
-    <update id="update">
-        UPDATE seckill_order
-        <set>
-            <if test="goodsId != null">goods_id = #{goodsId},</if>
-            <if test="orderId != null">order_id = #{orderId},</if>
-            <if test="status != null">status = #{status},</if>
-            <if test="updateTime != null">update_time = #{updateTime},</if>
-        </set>
-        WHERE id = #{id}
-    </update>
-
-    <delete id="deleteById">
-        DELETE FROM my_mall.seckill_order WHERE id = #{id}
-    </delete>
-
 </mapper>

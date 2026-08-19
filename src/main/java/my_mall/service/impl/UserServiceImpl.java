@@ -1,8 +1,8 @@
 package my_mall.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.mysql.cj.protocol.MessageSender;
 import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
 import my_mall.constant.MessageConstant;
@@ -20,8 +20,8 @@ import my_mall.service.UserService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,6 +30,8 @@ import java.util.List;
 public class UserServiceImpl  implements UserService {
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private BCryptPasswordEncoder passwordEncoder;
 
     @SneakyThrows
     @Override
@@ -40,7 +42,7 @@ public class UserServiceImpl  implements UserService {
             throw new UserNameNotExistException(MessageConstant.USERNAME_NOT_EXIST);
         }
         String password = loginDTO.getPassword();
-        if(!DigestUtils.md5DigestAsHex(password.getBytes()).equals(user.getPassword())){
+        if(!passwordEncoder.matches(password, user.getPassword())){
             throw new PasswordErrorException(MessageConstant.ADMIN_PASSWORD_ERROR+ "，用户账号：" + loginDTO.getUsername());
         }
         if(user.getLocked()==true){
@@ -52,10 +54,7 @@ public class UserServiceImpl  implements UserService {
     @SneakyThrows
     @Override
     public void register(LoginDTO loginDTO) {
-        String nickName = "user" + System.currentTimeMillis();
-        while (userMapper.getByNickName(nickName)!=null) {
-            nickName = "user" + System.currentTimeMillis() + (int)(Math.random() * 100);
-        }
+        String nickName = "user" + IdUtil.getSnowflake().nextIdStr();
         if(userMapper.getByLoginName(loginDTO.getUsername()) != null){
             throw new RepeatKeyException(MessageConstant.USERNAME_EXIST + "，用户名：" + loginDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());
         }
@@ -65,7 +64,7 @@ public class UserServiceImpl  implements UserService {
         User user=User.builder()
                 .loginName(loginDTO.getUsername())
                 .nickName(nickName)
-                .password(DigestUtils.md5DigestAsHex(loginDTO.getPassword().getBytes()))
+                .password(passwordEncoder.encode(loginDTO.getPassword()))
                 .locked(false)
                 .introduceSign("")
                 .build();
@@ -86,7 +85,7 @@ public class UserServiceImpl  implements UserService {
         BeanUtils.copyProperties(userVO,user);
         user.setId(id);
         if(userVO.getPassword()!=null)
-        user.setPassword(DigestUtils.md5DigestAsHex(userVO.getPassword().getBytes()));
+        user.setPassword(passwordEncoder.encode(userVO.getPassword()));
         userMapper.update(user);
     }
 

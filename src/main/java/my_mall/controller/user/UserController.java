@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import my_mall.constant.MessageConstant;
 import my_mall.annotation.OperationLog;
 import my_mall.entity.dto.LoginDTO;
 import my_mall.entity.po.User;
@@ -23,12 +24,12 @@ import my_mall.entity.vo.UserVO;
 import my_mall.result.Result;
 import my_mall.service.UserService;
 import my_mall.utils.JwtUtils;
-import my_mall.utils.TLUtils;
 
 @Tag(name = "用户模块")
 @RestController("userUserController")
 @RequestMapping("/api/user")
 @Slf4j
+//用户端：登录、注册、个人信息
 public class UserController {
     @Resource
     private JwtProperties jwtProperties;
@@ -42,7 +43,7 @@ public class UserController {
     public Result login(@RequestBody LoginDTO loginDTO){
         User user = userService.login(loginDTO);
         if(user == null){
-            return Result.error("账号或密码错误");
+            return Result.error(MessageConstant.LOGIN_ERROR);
         }
         Map<String,Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
@@ -62,7 +63,6 @@ public class UserController {
             recordParams = true, recordResult = true)
     @PostMapping("/logout")
     public Result logout(){
-        TLUtils.remove();
         return Result.success();
     }
 

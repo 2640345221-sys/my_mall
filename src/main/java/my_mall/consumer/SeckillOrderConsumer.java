@@ -36,6 +36,8 @@ public class SeckillOrderConsumer {
     private OrderAddressMapper orderAddressMapper;
     @Resource
     private IdGenerator idGenerator;
+    @Resource
+    private SeckillOrderMapper seckillOrderMapper;
 
     @RabbitListener(queues = RabbitMQConfig.SECKILL_QUEUE)
     @Transactional(rollbackFor = Exception.class)
@@ -52,6 +54,9 @@ public class SeckillOrderConsumer {
             throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
         }
         Goods goods = goodsMapper.getById(seckillGoods.getGoodsId());
+        if (goods == null) {
+            throw new SeckillException(MessageConstant.GOODS_NOT_EXIST);
+        }
 
         Order order = Order.builder()
                 .userId(message.getUserId())
@@ -63,6 +68,12 @@ public class SeckillOrderConsumer {
                 .orderStatus(OrderStatusEnum.ORDER_PRE_PAY.getStatus())
                 .build();
         orderMapper.insert(order);
+
+        //回写秒杀订单的 orderId，关联普通订单
+        SeckillOrder seckillOrder = seckillOrderMapper.getByUserIdAndGoodsId(message.getUserId(), goods.getId());
+        if (seckillOrder != null) {
+            seckillOrderMapper.updateOrderId(seckillOrder.getId(), order.getId());
+        }
 
         OrderItem orderItem = OrderItem.builder()
                 .orderId(order.getId())

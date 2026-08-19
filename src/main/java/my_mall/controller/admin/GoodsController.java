@@ -24,6 +24,7 @@ import java.util.List;
 @RestController("adminGoodsController")
 @RequestMapping("/api/admin/goods")
 @Slf4j
+//管理端：商品的增删改查和上下架
 public class GoodsController {
     @Resource
     private GoodsService goodsService;

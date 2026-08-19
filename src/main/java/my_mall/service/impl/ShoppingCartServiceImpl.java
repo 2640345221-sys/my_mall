@@ -47,11 +47,18 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             throw new GoodsIsNotSellingException(MessageConstant.GOODS_NOT_SELLING + "，商品ID：" + cartItemDTO.getGoodsId() + "，商品名称：" + goods.getName() + "，操作用户ID：" + userId);
         }
 
-        ShoppingCart shoppingCart = new ShoppingCart();
-        shoppingCart.setUserId(userId);
-        shoppingCart.setGoodsId(cartItemDTO.getGoodsId());
-        shoppingCart.setGoodsCount(cartItemDTO.getGoodsCount());
-        shoppingCartMapper.insert(shoppingCart);
+        //已加过该商品则合并数量，否则新增
+        ShoppingCart existing = shoppingCartMapper.getByUserIdAndGoodsId(userId, cartItemDTO.getGoodsId());
+        if (existing != null) {
+            existing.setGoodsCount(existing.getGoodsCount() + cartItemDTO.getGoodsCount());
+            shoppingCartMapper.update(existing);
+        } else {
+            ShoppingCart shoppingCart = new ShoppingCart();
+            shoppingCart.setUserId(userId);
+            shoppingCart.setGoodsId(cartItemDTO.getGoodsId());
+            shoppingCart.setGoodsCount(cartItemDTO.getGoodsCount());
+            shoppingCartMapper.insert(shoppingCart);
+        }
 
     }
 

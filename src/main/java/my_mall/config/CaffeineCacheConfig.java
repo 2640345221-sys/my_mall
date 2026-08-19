@@ -9,7 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class CaffeineCacheConfig {
-
+    //两个缓存，只为最频繁访问的数据存储了，商品种类和 热门，最新，推荐商品
+    //最新商品不是所有商品的最新，而是展示界面的最新，10分钟一刷新是可以的
     @Bean
     public Cache<String, Object> categoryCache() {
         return Caffeine.newBuilder()

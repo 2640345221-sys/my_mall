@@ -13,7 +13,7 @@ public class SeckillGoods {
     private Long id;
     private Long goodsId;
     private Integer seckillPrice;
-    private Double stockCount;
+    private Integer stockCount;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Integer status;

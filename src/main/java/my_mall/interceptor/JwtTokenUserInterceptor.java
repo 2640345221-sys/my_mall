@@ -24,6 +24,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        //每次请求先清空 ThreadLocal，防止线程复用导致 userId 串号
         TLUtils.remove();
 
         String token = request.getHeader(jwtProperties.getUserTokenName());
@@ -31,6 +32,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         boolean hasToken = false;
         if (token != null && !token.isEmpty()) {
             try {
+                //解析 token，取出 userId 存入 ThreadLocal 供业务使用
                 Claims claims = JwtUtils.parseJwtToken(token, jwtProperties.getUserSecretKey());
                 Long userId = Long.valueOf(claims.get("userId").toString());
                 TLUtils.setUserId(userId);
@@ -41,8 +43,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
             }
         }
 
-        String method = request.getMethod();
-        if (!"GET".equalsIgnoreCase(method) && !hasToken) {
+        if (!hasToken) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"code\":401,\"msg\":\"请先登录\"}");

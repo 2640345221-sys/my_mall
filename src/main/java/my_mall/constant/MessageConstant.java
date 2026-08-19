@@ -37,4 +37,16 @@ public class MessageConstant {
     public static final String SECKILL_STOCK_INVALID = "秒杀库存不合规";
     public static final String SECKILL_TIME_INVALID = "秒杀开始时间必须早于结束时间，且结束时间不能早于当前时间";
     public static final String SECKILL_GOODS_NOT_EXIST = "秒杀商品不存在";
+    public static final String ORDER_TIMEOUT_HANDLE_ERROR = "超时订单处理失败";
+    public static final String ORDER_AUTO_CONFIRM_ERROR = "自动确认完成订单失败";
+    public static final String FILE_EMPTY = "文件为空";
+    public static final String FILE_NAME_EMPTY = "文件名为空";
+    public static final String FILE_EXTENSION_UNRECOGNIZED = "无法识别文件扩展名";
+    public static final String RESET_NEW_GOODS_ERROR = "重新设置最新商品失败";
+    public static final String RESET_POPULAR_GOODS_ERROR = "重新设置热销商品失败";
+    public static final String RESET_RECOMMEND_GOODS_ERROR = "重新设置推荐商品失败";
+    public static final String DB_STOCK_NOT_ENOUGH = "数据库库存不足";
+    public static final String SECKILL_STOCK_NOT_ENOUGH = "库存不足";
+    public static final String RESOURCE_NOT_EXIST = "资源不存在";
+    public static final String SERVER_INTERNAL_ERROR = "服务器内部错误，请稍后重试";
 }

@@ -19,6 +19,7 @@ import my_mall.service.OrderService;
 @RestController("adminOrderController")
 @RequestMapping("/api/admin/order")
 @Slf4j
+//管理端：订单管理（配货、出库、关闭）
 public class OrderController {
     @Resource
     private OrderService orderService;

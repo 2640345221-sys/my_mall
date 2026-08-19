@@ -19,6 +19,7 @@ import java.util.List;
 @RestController("adminCategoryController")
 @RequestMapping("/api/admin/category")
 @Slf4j
+//管理端：商品分类的增删改查
 public class CategoryController {
     @Resource
     private CategoryService categoryService;

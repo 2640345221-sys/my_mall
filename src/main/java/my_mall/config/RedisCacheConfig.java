@@ -17,6 +17,7 @@ import java.util.Map;
 @Configuration
 public class RedisCacheConfig {
 
+    //Redis 缓存管理器，给不同缓存配置不同的过期时间
     @Bean
     public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory,
                                                GenericJackson2JsonRedisSerializer serializer) {

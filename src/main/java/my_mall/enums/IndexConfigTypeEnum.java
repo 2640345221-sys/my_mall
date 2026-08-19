@@ -3,6 +3,7 @@ package my_mall.enums;
 import lombok.Getter;
 import lombok.Setter;
 
+//首页配置类型枚举：3热销商品 4最新商品 5推荐商品
 public enum IndexConfigTypeEnum {
     POPULAR_GOODS(3,"热销商品"),
     NEW_GOODS(4,"最新商品"),

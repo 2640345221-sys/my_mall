@@ -24,6 +24,7 @@ import my_mall.utils.TLUtils;
 @RestController("adminUserController")
 @RequestMapping("/api/admin/user")
 @Slf4j
+//管理端：用户分页查询和锁定
 public class UserController {
     @Resource
     private UserService userService;

@@ -29,6 +29,7 @@ import my_mall.utils.TLUtils;
 @RestController
 @RequestMapping("/api/admin")
 @Slf4j
+//管理端：管理员登录和更新信息
 public class AdminController {
     @Resource
     private AdminService adminService;

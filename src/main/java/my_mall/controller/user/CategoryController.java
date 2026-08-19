@@ -19,6 +19,7 @@ import my_mall.service.CategoryService;
 @RestController("userCategoryController")
 @RequestMapping("/api/user/category")
 @Slf4j
+//用户端：获取商品分类树
 public class CategoryController {
     @Resource
     private CategoryService categoryService;

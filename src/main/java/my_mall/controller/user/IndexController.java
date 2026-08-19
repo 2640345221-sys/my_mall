@@ -19,6 +19,7 @@ import my_mall.service.IndexConfigService;
 @RestController("userIndexController")
 @RequestMapping("/api/user/index")
 @Slf4j
+//用户端：首页的新品/热销/推荐商品
 public class IndexController {
     @Resource
     private IndexConfigService indexConfigService;

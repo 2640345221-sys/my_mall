@@ -2,6 +2,7 @@ package my_mall.service.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import jakarta.annotation.Resource;
+import my_mall.config.CacheEvictListener;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.CategoryDTO;
 import my_mall.entity.po.GoodsCategory;
@@ -12,7 +13,7 @@ import my_mall.service.CategoryService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.interceptor.SimpleKey;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -31,26 +32,31 @@ public class CategoryServiceImpl implements CategoryService {
     private Cache<String, Object> categoryCache;
     @Resource
     private CacheManager cacheManager;
+    @Resource(name = "stringRedisTemplate")
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<IndexCategoryVO> getCategory() {
         String key = "tree";
 
+        //先查本地缓存 Caffeine（L1）
         List<IndexCategoryVO> cached = (List<IndexCategoryVO>) categoryCache.getIfPresent(key);
         if (cached != null) {
             return cached;
         }
 
+        //本地没有，查 Redis 二级缓存（L2）  因为引入了caffeine的cache，所以下面的cache添加前缀
         org.springframework.cache.Cache redisCache = cacheManager.getCache(CACHE_NAME);
         if (redisCache != null) {
             List<IndexCategoryVO> redisValue = redisCache.get(key, List.class);
             if (redisValue != null) {
+                //把一级缓存写进去
                 categoryCache.put(key, redisValue);
                 return redisValue;
             }
         }
 
+        //两级都没有，查数据库构建分类树，并写回两级缓存
         List<IndexCategoryVO> result = buildTree(categoryMapper.getAll());
 
         categoryCache.put(key, result);
@@ -105,8 +111,11 @@ public class CategoryServiceImpl implements CategoryService {
         if (redisCache != null) {
             redisCache.clear();
         }
+        //发布消息，通知其他实例清它们的本地缓存
+        stringRedisTemplate.convertAndSend(CacheEvictListener.CACHE_EVICT_TOPIC, CacheEvictListener.CATEGORY_CACHE);
     }
 
+    //把扁平分类列表组装成树形结构：先全部转VO，再按 parentId 挂到父节点下
     private List<IndexCategoryVO> buildTree(List<GoodsCategory> gList) {
         Map<Long, IndexCategoryVO> voMap = new HashMap<>();
         List<IndexCategoryVO> result = new ArrayList<>();

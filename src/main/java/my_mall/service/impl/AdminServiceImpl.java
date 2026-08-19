@@ -12,12 +12,14 @@ import my_mall.service.AdminService;
 import my_mall.utils.TLUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.DigestUtils;
 @Service
 public class AdminServiceImpl implements AdminService {
     @Resource
     private AdminMapper adminMapper;
+    @Resource
+    private BCryptPasswordEncoder passwordEncoder;
     @Override
     public Admin login(LoginDTO loginDTO) {
         String username = loginDTO.getUsername();
@@ -26,7 +28,7 @@ public class AdminServiceImpl implements AdminService {
             throw new UserNameNotExistException(MessageConstant.ADMIN_NOT_EXIST + "，用户名：" + username + "，操作用户ID：" + TLUtils.getUserId());
         }
         String password = loginDTO.getPassword();
-        if(!DigestUtils.md5DigestAsHex(password.getBytes()).equals(admin.getPassword())){
+        if(!passwordEncoder.matches(password, admin.getPassword())){
             throw new PasswordErrorException(MessageConstant.ADMIN_PASSWORD_ERROR + "，用户名：" + username + "，操作用户ID：" + TLUtils.getUserId());
         }
         return admin;
@@ -40,7 +42,10 @@ public class AdminServiceImpl implements AdminService {
             throw new UserNameNotExistException(MessageConstant.ADMIN_NOT_EXIST + "，用户名：" + adminUpdateDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());
         }
         BeanUtils.copyProperties(adminUpdateDTO,admin);
-        admin.setId(TLUtils.getUserId());
+        //传了新密码才重新加密
+        if(adminUpdateDTO.getPassword() != null && !adminUpdateDTO.getPassword().isEmpty()){
+            admin.setPassword(passwordEncoder.encode(adminUpdateDTO.getPassword()));
+        }
         adminMapper.update(admin);
     }
 

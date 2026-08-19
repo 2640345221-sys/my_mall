@@ -23,10 +23,9 @@ public class JSONDataUtils {
                         && !(arg instanceof MultipartFile))
                 .toArray();
         if (filtered.length == 0) {
-            return "【参数包含request/response/file等，无法记录】";
+            return "参数只有request/response/file等，无法记录";
         }
-        Object toSerialize = filtered.length == 1 ? filtered[0] : filtered;
-        return objectMapper.writeValueAsString(toSerialize);
+        return objectMapper.writeValueAsString(filtered);
     }
 
     /**
@@ -39,7 +38,7 @@ public class JSONDataUtils {
         }
         String json = objectMapper.writeValueAsString(result);
         if (json.length() > 2000) {
-            json = json.substring(0, 2000) + "...(truncated)";
+            json = json.substring(0, 2000) + "...";
         }
         return json;
     }

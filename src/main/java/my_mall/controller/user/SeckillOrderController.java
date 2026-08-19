@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController("userSeckillOrderController")
 @RequestMapping("/api/user/seckillOrder")
 @Slf4j
+//用户端：秒杀下单和结果查询
 public class SeckillOrderController {
 
     @Resource

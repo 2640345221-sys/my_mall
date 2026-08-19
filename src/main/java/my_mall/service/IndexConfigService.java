@@ -25,5 +25,11 @@ public interface IndexConfigService {
 
     List<Goods> getRecommendGoods();
 
+    void resetNewGoods();
+
+    void resetPopularGoods();
+
+    void resetRecommendGoods();
+
     void resetIndexConfig();
 }

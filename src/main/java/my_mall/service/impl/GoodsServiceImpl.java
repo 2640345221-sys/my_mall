@@ -63,6 +63,7 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     @Transactional
     public void insert(Goods goods) {
+        //商品必须挂在三级分类下
         GoodsCategory category = categoryMapper.getById(goods.getCategoryId());
         if (category == null || category.getLevel() != 3) {
             throw new RuntimeException(MessageConstant.CATEGORY_LEVEL_ERROR);
@@ -117,6 +118,7 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     @Transactional
+    //删除商品时级联清理：购物车、首页配置、秒杀商品
     public void deleteGoods(Long id) {
         shoppingCartMapper.deleteByGoodsId(id);
         indexConfigMapper.deleteByGoodsId(id);

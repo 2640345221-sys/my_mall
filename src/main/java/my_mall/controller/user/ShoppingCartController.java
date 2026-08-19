@@ -27,6 +27,7 @@ import my_mall.service.ShoppingCartService;
 @RestController
 @RequestMapping("/api/user/cart")
 @Slf4j
+//用户端：购物车的增删改查
 public class ShoppingCartController {
     @Resource
     private ShoppingCartService shoppingCartService;

@@ -4,6 +4,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.config.RabbitMQConfig;
 import my_mall.constant.JudgeConstant;
+import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.SeckillMessage;
 import my_mall.entity.po.SeckillOrder;
 import my_mall.exception.SeckillException;
@@ -78,14 +79,22 @@ public class SeckillRequestConsumer {
         }
 
         try {
-            int rows = seckillGoodsMapper.decreaseStock(seckillGoodsId, message.getCount());
-            if (rows == 0) {
-                throw new SeckillException("库存不足");
-            }
             var seckillGoods = seckillGoodsMapper.getById(seckillGoodsId);
             if (seckillGoods == null) {
-                throw new SeckillException("秒杀商品不存在");
+                throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
             }
+
+            SeckillOrder existing = seckillOrderMapper.getByUserIdAndGoodsId(userId, seckillGoods.getGoodsId());
+            if (existing != null) {
+                redisTemplate.opsForValue().increment(stockKey, message.getCount());
+                return;
+            }
+
+            int rows = seckillGoodsMapper.decreaseStock(seckillGoodsId, message.getCount());
+            if (rows == 0) {
+                throw new SeckillException(MessageConstant.SECKILL_STOCK_NOT_ENOUGH);
+            }
+
             SeckillOrder seckillOrder = SeckillOrder.builder()
                     .userId(userId)
                     .goodsId(seckillGoods.getGoodsId())

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController("adminSeckillGoodsController")
 @RequestMapping("/api/admin/seckill")
 @Slf4j
+//管理端：秒杀商品的增删改查和上下架
 public class SeckillGoodsController {
 
     @Resource

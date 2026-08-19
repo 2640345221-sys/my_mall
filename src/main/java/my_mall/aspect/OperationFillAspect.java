@@ -1,7 +1,6 @@
 package my_mall.aspect;
 
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import my_mall.annotation.OperationFill;
 import my_mall.utils.TLUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -18,9 +17,8 @@ import java.time.LocalDateTime;
 
 @Aspect
 @Component
-@Slf4j
 public class OperationFillAspect {
-
+    //使用了OperationFill注解的方法
     @Pointcut("@annotation(my_mall.annotation.OperationFill)")
     public void operationFillPointcut() {}
 
@@ -28,6 +26,8 @@ public class OperationFillAspect {
     public Object aroundFill(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
+
+        //获取这个地方的注解用来查看要填充哪些参数
         OperationFill operationFill = method.getAnnotation(OperationFill.class);
 
         Object[] args = joinPoint.getArgs();
@@ -43,7 +43,7 @@ public class OperationFillAspect {
         Class<?> clazz = arg.getClass();
         LocalDateTime now=LocalDateTime.now();
         Long userId= TLUtils.getUserId();
-
+        //根据参数选择（哪些为True）填充不同的字段
         if(operationFill.fillCreateTime()){
             setFieldValue(arg,clazz,"createTime",now);
         }
@@ -62,22 +62,6 @@ public class OperationFillAspect {
     private void setFieldValue(Object arg, Class<?> clazz, String fieldName, Object value) {
         Field field = clazz.getDeclaredField(fieldName);
         field.setAccessible(true);
-        Class<?> fieldType = field.getType();
-        Object finalValue = value;
-
-        if (value != null && !fieldType.isAssignableFrom(value.getClass())) {
-            if (fieldType == Integer.class && value instanceof Long) {
-                finalValue = ((Long) value).intValue();
-            } else if (fieldType == Long.class && value instanceof Integer) {
-                finalValue = ((Integer) value).longValue();
-            } else if (fieldType == String.class) {
-                finalValue = value.toString();
-            } else {
-                log.warn("Cannot set field {} of type {} with value of type {}",
-                        fieldName, fieldType.getSimpleName(), value.getClass().getSimpleName());
-                return;
-            }
-        }
-        field.set(arg, finalValue);
+        field.set(arg, value);
     }
 }

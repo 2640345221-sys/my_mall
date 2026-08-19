@@ -16,4 +16,6 @@ public interface SeckillGoodsService {
     SeckillGoods getById(Long id);
 
     void updateStatus(Long id,Integer status);
+
+    void autoUpdateStatus();
 }

@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import my_mall.constant.MessageConstant;
 import my_mall.annotation.OperationLog;
 import my_mall.result.Result;
 import my_mall.utils.OssUtils;
@@ -22,6 +23,7 @@ import my_mall.utils.OssUtils;
 @RestController
 @RequestMapping("/api/admin/common")
 @Slf4j
+//通用接口：文件上传到 OSS
 public class CommonController {
     @Resource
     private OssUtils aliOssUtil;
@@ -31,16 +33,16 @@ public class CommonController {
     @PostMapping("/upload")
     public Result<String> upload(MultipartFile file){
         if (file.isEmpty()) {
-            throw new UploadFileFailedException("文件为空");
+            throw new UploadFileFailedException(MessageConstant.FILE_EMPTY);
         }
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.isEmpty()) {
-            throw new UploadFileFailedException("文件名为空");
+            throw new UploadFileFailedException(MessageConstant.FILE_NAME_EMPTY);
         }
 
         int dotIndex = originalFilename.lastIndexOf(".");
         if (dotIndex <= 0) {
-            throw new UploadFileFailedException("无法识别文件扩展名");
+            throw new UploadFileFailedException(MessageConstant.FILE_EXTENSION_UNRECOGNIZED);
         }
 
         String extension = originalFilename.substring(dotIndex);

@@ -11,4 +11,16 @@
                  )
     </insert>
 
+    <select id="getByOrderId" resultType="my_mall.entity.po.OrderAddress">
+        select * from my_mall.order_address where order_id = #{id}
+    </select>
+
+    <select id="getByOrderIds" resultType="my_mall.entity.po.OrderAddress">
+        select * from my_mall.order_address
+        where order_id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

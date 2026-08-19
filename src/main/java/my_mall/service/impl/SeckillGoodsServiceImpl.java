@@ -6,6 +6,7 @@ import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import my_mall.constant.JudgeConstant;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.SeckillGoodsPageDTO;
 import my_mall.entity.po.Goods;
@@ -62,7 +63,7 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
                 seckillGoods.getEndTime().isBefore(now)) {
             throw new SeckillException(MessageConstant.SECKILL_TIME_INVALID);
         }
-        seckillGoods.setStatus(1);
+        seckillGoods.setStatus(JudgeConstant.ENABLE);
         seckillGoodsMapper.insert(seckillGoods);
         redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount().intValue()), Duration.ofHours(2));
         log.info("新增秒杀商品成功，ID：{}，商品ID：{}", seckillGoods.getId(), seckillGoods.getGoodsId());
@@ -138,5 +139,26 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             redisTemplate.delete("seckill:stock:" + id);
         }
         log.info("修改秒杀商品状态成功，ID：{}，新状态：{}", id, status);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void autoUpdateStatus() {
+        //到开始时间且未启用的秒杀，自动启用并预热库存
+        List<SeckillGoods> toStartList = seckillGoodsMapper.selectToStart();
+        for (SeckillGoods goods : toStartList) {
+            seckillGoodsMapper.updateStatus(goods.getId(), JudgeConstant.ENABLE);
+            redisTemplate.opsForValue().set("seckill:stock:" + goods.getId(),
+                    String.valueOf(goods.getStockCount().intValue()), Duration.ofHours(2));
+            log.info("秒杀活动自动开始，ID：{}", goods.getId());
+        }
+
+        //到结束时间且仍启用的秒杀，自动禁用并清理库存
+        List<SeckillGoods> toEndList = seckillGoodsMapper.selectToEnd();
+        for (SeckillGoods goods : toEndList) {
+            seckillGoodsMapper.updateStatus(goods.getId(), JudgeConstant.DISABLE);
+            redisTemplate.delete("seckill:stock:" + goods.getId());
+            log.info("秒杀活动自动结束，ID：{}", goods.getId());
+        }
     }
 }

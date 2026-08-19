@@ -48,10 +48,10 @@ mybatis:
 
 kkek:
   jwt:
-    admin-secret-key: mySecretKeymySecretKeymySecretKeymySecretKey
+    admin-secret-key: myMallAdminSecretKey2026myMallAdminSecretKey
     admin-ttl: 7200000
     admin-token-name: token
-    user-secret-key: mySecretKeymySecretKeymySecretKeymySecretKey
+    user-secret-key: myMallUserSecretKey2026myMallUserSecretKey
     user-ttl: 7200000
     user-token-name: token
 

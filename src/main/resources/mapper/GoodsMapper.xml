@@ -69,6 +69,13 @@
             AND stock_num >= #{item.count}
         </foreach>
     </update>
+    <update id="decreaseStock">
+        UPDATE goods
+        SET stock_num = stock_num - #{count},
+            update_time = NOW()
+        WHERE id = #{id}
+        AND stock_num >= #{count}
+    </update>
     <update id="recoverStock">
         <foreach collection="stockList" item="item" separator=";">
             UPDATE goods

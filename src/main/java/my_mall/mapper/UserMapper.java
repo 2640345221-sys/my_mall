@@ -4,20 +4,18 @@ import com.github.pagehelper.Page;
 import my_mall.annotation.OperationFill;
 import my_mall.entity.dto.UserPageDTO;
 import my_mall.entity.po.User;
-import my_mall.entity.po.UserAddress;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
 @Mapper
+//用户表的增删改查
 public interface UserMapper {
 
     @Select("select * from my_mall.user where login_name=#{username}")
     User getByUsername(String username);
     
-    @Select("select * from my_mall.user where nick_name=#{nickname}")
-    User getByNickName(String nickName);
     @OperationFill(fillCreateTime = true)
     void insert(User user);
 
@@ -28,7 +26,9 @@ public interface UserMapper {
 
     Page<User> getPage(UserPageDTO userPageDTO);
 
+    //批量修改用户锁定状态
     void setStatus(Integer lockStatus, List<Long> ids);
 
+    //按登录名查用户
     User getByLoginName(String username);
 }

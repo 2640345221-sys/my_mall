@@ -24,18 +24,19 @@ DROP TABLE IF EXISTS `admin`;
 CREATE TABLE `admin`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '管理员id',
   `username` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '管理员登陆名称',
-  `password` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '管理员登陆密码',
+  `password` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '管理员登陆密码(BCrypt)',
   `nick_name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '管理员显示昵称',
   `locked` tinyint NULL DEFAULT 0 COMMENT '是否锁定 0未锁定 1已锁定无法登陆',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_username` (`username`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of admin
 -- ----------------------------
-INSERT INTO `admin` VALUES (1, 'admin', 'e10adc3949ba59abbe56e057f20f883e', '十三', 0);
-INSERT INTO `admin` VALUES (2, 'newbee-admin1', 'e10adc3949ba59abbe56e057f20f883e', '新蜂01', 0);
-INSERT INTO `admin` VALUES (3, 'newbee-admin2', 'e10adc3949ba59abbe56e057f20f883e', '新蜂02', 0);
+INSERT INTO `admin` VALUES (1, 'admin', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '十三', 0);
+INSERT INTO `admin` VALUES (2, 'newbee-admin1', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '新蜂01', 0);
+INSERT INTO `admin` VALUES (3, 'newbee-admin2', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '新蜂02', 0);
 
 -- ----------------------------
 -- Table structure for carousel
@@ -47,9 +48,9 @@ CREATE TABLE `carousel`  (
   `redirect_url` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '\'##\'' COMMENT '点击后的跳转地址(默认不跳转)',
   `rank` int NOT NULL DEFAULT 0 COMMENT '排序值(字段越大越靠前)',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `create_user` int NOT NULL DEFAULT 0 COMMENT '创建者id',
+  `create_user` bigint NOT NULL DEFAULT 0 COMMENT '创建者id',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-  `update_user` int NOT NULL DEFAULT 0 COMMENT '修改者id',
+  `update_user` bigint NOT NULL DEFAULT 0 COMMENT '修改者id',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
@@ -74,13 +75,13 @@ CREATE TABLE `goods`  (
   `category_id` bigint NOT NULL DEFAULT 0 COMMENT '关联分类id',
   `cover_img` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '/admin/dist/img/no-img.png' COMMENT '商品主图',
   `detail_content` text CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '商品详情',
-  `original_price` int NOT NULL DEFAULT 1 COMMENT '商品价格',
-  `selling_price` int NOT NULL DEFAULT 1 COMMENT '商品实际售价',
+  `original_price` int NOT NULL DEFAULT 100 COMMENT '商品价格(分)',
+  `selling_price` int NOT NULL DEFAULT 100 COMMENT '商品实际售价(分)',
   `stock_num` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '商品库存数量',
   `sell_status` tinyint NOT NULL DEFAULT 0 COMMENT '商品上架状态 1-下架 0-上架',
-  `create_user` int NOT NULL DEFAULT 0 COMMENT '添加者主键id',
+  `create_user` bigint NOT NULL DEFAULT 0 COMMENT '添加者主键id',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '商品添加时间',
-  `update_user` int NOT NULL DEFAULT 0 COMMENT '修改者主键id',
+  `update_user` bigint NOT NULL DEFAULT 0 COMMENT '修改者主键id',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '商品修改时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 10963 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
@@ -158,9 +159,9 @@ CREATE TABLE `goods_category`  (
   `name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '分类名称',
   `rank` int NOT NULL DEFAULT 0 COMMENT '排序值(字段越大越靠前)',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `create_user` int NOT NULL DEFAULT 0 COMMENT '创建者id',
+  `create_user` bigint NOT NULL DEFAULT 0 COMMENT '创建者id',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-  `update_user` int NULL DEFAULT 0 COMMENT '修改者id',
+  `update_user` bigint NULL DEFAULT 0 COMMENT '修改者id',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 121 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
@@ -272,9 +273,9 @@ CREATE TABLE `index_config`  (
   `redirect_url` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '##' COMMENT '点击后的跳转地址(默认不跳转)',
   `rank` int NOT NULL DEFAULT 0 COMMENT '排序值(字段越大越靠前)',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `create_user` int NOT NULL DEFAULT 0 COMMENT '创建者id',
+  `create_user` bigint NOT NULL DEFAULT 0 COMMENT '创建者id',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最新修改时间',
-  `update_user` int NULL DEFAULT 0 COMMENT '修改者id',
+  `update_user` bigint NULL DEFAULT 0 COMMENT '修改者id',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 553 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = Dynamic;
 
@@ -296,7 +297,7 @@ CREATE TABLE `order`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '订单表主键id',
   `order_no` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '订单号',
   `user_id` bigint NOT NULL DEFAULT 0 COMMENT '用户主键id',
-  `total_price` int NOT NULL DEFAULT 1 COMMENT '订单总价',
+  `total_price` int NOT NULL DEFAULT 100 COMMENT '订单总价(分)',
   `pay_status` tinyint NOT NULL DEFAULT 0 COMMENT '支付状态:0.未支付,1.支付成功,-1:支付失败',
   `pay_type` tinyint NOT NULL DEFAULT 0 COMMENT '0.无 1.支付宝支付 2.微信支付',
   `pay_time` datetime NULL DEFAULT NULL COMMENT '支付时间',
@@ -304,7 +305,10 @@ CREATE TABLE `order`  (
   `extra_info` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '订单body',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最新修改时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_order_no` (`order_no`) USING BTREE,
+  KEY `idx_user_id` (`user_id`) USING BTREE,
+  KEY `idx_status_time` (`order_status`, `create_time`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 64299 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -426,8 +430,9 @@ CREATE TABLE `order_address`  (
   `city` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '城',
   `region` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '区',
   `detail_address` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '收件详细地址(街道/楼宇/单元)',
-  `order_id` mediumtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL COMMENT '订单的主键',
-  PRIMARY KEY (`id`) USING BTREE
+  `order_id` bigint NULL COMMENT '订单的主键',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_order_id` (`order_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '订单收货地址关联表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -459,10 +464,11 @@ CREATE TABLE `order_item`  (
   `goods_id` bigint NOT NULL DEFAULT 0 COMMENT '关联商品id',
   `goods_name` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '下单时商品的名称(订单快照)',
   `cover_img` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '下单时商品的主图(订单快照)',
-  `price` int NOT NULL DEFAULT 1 COMMENT '下单时商品的价格(订单快照)',
+  `price` int NOT NULL DEFAULT 100 COMMENT '下单时商品的价格(分,订单快照)',
   `count` int NOT NULL DEFAULT 1 COMMENT '数量(订单快照)',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_order_id` (`order_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 64304 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -491,7 +497,7 @@ DROP TABLE IF EXISTS `seckill_goods`;
 CREATE TABLE `seckill_goods`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `goods_id` bigint NOT NULL COMMENT '普通商品ID',
-  `seckill_price` decimal(10, 2) NOT NULL COMMENT '秒杀价',
+  `seckill_price` int NOT NULL COMMENT '秒杀价(分)',
   `stock_count` int NOT NULL COMMENT '秒杀库存',
   `start_time` datetime NOT NULL,
   `end_time` datetime NOT NULL,
@@ -502,8 +508,8 @@ CREATE TABLE `seckill_goods`  (
 -- ----------------------------
 -- Records of seckill_goods
 -- ----------------------------
-INSERT INTO `seckill_goods` VALUES (6, 10003, 99.00, 9, '2026-05-04 10:00:00', '2026-05-12 22:00:00', 0);
-INSERT INTO `seckill_goods` VALUES (7, 10003, 100.00, 7, '2026-05-30 10:00:00', '2026-05-31 10:00:00', 1);
+INSERT INTO `seckill_goods` VALUES (6, 10003, 9900, 9, '2026-05-04 10:00:00', '2026-05-12 22:00:00', 0);
+INSERT INTO `seckill_goods` VALUES (7, 10003, 10000, 7, '2026-05-30 10:00:00', '2026-05-31 10:00:00', 1);
 
 -- ----------------------------
 -- Table structure for seckill_order
@@ -517,17 +523,16 @@ CREATE TABLE `seckill_order`  (
   `status` tinyint NULL DEFAULT 0 COMMENT '0处理中 1成功 2失败',
   `create_time` datetime NULL DEFAULT NULL,
   `update_time` datetime NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_user_goods` (`user_id`, `goods_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 752 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of seckill_order
 -- ----------------------------
 INSERT INTO `seckill_order` VALUES (2, 7, 10003, 6, 1, '2026-05-06 19:56:52', '2026-05-06 19:56:52');
-INSERT INTO `seckill_order` VALUES (3, 7, 10003, 7, 1, '2026-05-06 19:59:41', '2026-05-06 19:59:41');
 INSERT INTO `seckill_order` VALUES (740, 5, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
 INSERT INTO `seckill_order` VALUES (741, 6, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
-INSERT INTO `seckill_order` VALUES (742, 7, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
 INSERT INTO `seckill_order` VALUES (743, 8, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
 INSERT INTO `seckill_order` VALUES (744, 9, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
 INSERT INTO `seckill_order` VALUES (745, 10, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
@@ -535,7 +540,6 @@ INSERT INTO `seckill_order` VALUES (746, 11, 10003, 0, 1, '2026-05-08 18:30:29',
 INSERT INTO `seckill_order` VALUES (747, 12, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
 INSERT INTO `seckill_order` VALUES (748, 13, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
 INSERT INTO `seckill_order` VALUES (749, 14, 10003, 0, 1, '2026-05-08 18:30:29', '2026-05-08 18:30:29');
-INSERT INTO `seckill_order` VALUES (750, 7, 10003, 0, 1, '2026-05-08 19:28:03', '2026-05-08 19:28:03');
 INSERT INTO `seckill_order` VALUES (751, 1, 10003, 0, 1, '2026-05-30 11:59:31', '2026-05-30 11:59:31');
 
 -- ----------------------------
@@ -549,7 +553,8 @@ CREATE TABLE `shopping_cart`  (
   `goods_count` int NOT NULL DEFAULT 1 COMMENT '数量(最大为5)',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最新修改时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_user_id` (`user_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 22 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -564,40 +569,41 @@ CREATE TABLE `user`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户主键id',
   `nick_name` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '用户昵称',
   `login_name` varchar(11) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '登陆名称(默认为手机号)',
-  `password` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT 'MD5加密后的密码',
+  `password` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT 'BCrypt加密后的密码',
   `introduce_sign` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '个性签名',
   `locked` tinyint NOT NULL DEFAULT 0 COMMENT '锁定标识字段(0-未锁定 1-已锁定)',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_login_name` (`login_name`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 29 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, '十三', '13700002703', 'e10adc3949ba59abbe56e057f20f883e', '我不怕千万人阻挡，只怕自己投降', 0, '2020-05-22 08:44:57');
-INSERT INTO `user` VALUES (6, '陈尼克', '13711113333', 'e10adc3949ba59abbe56e057f20f883e', '测试用户陈尼克', 0, '2020-05-22 08:44:57');
-INSERT INTO `user` VALUES (7, '张三1', '13864971605', 'fcea920f7412b5da7be0cf42b8c93759', '这个人很勤快，但还是什么都没有写', 0, '2026-04-14 15:18:26');
-INSERT INTO `user` VALUES (8, '并非用户', '13864971606', 'fcea920f7412b5da7be0cf42b8c93759', '214124', 0, '2026-05-03 15:21:45');
-INSERT INTO `user` VALUES (9, '测试01', 'test01', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (10, '测试02', 'test02', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (11, '测试03', 'test03', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (12, '测试04', 'test04', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (13, '测试05', 'test05', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (14, '测试06', 'test06', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (15, '测试07', 'test07', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (16, '测试08', 'test08', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (17, '测试09', 'test09', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (18, '测试10', 'test10', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (19, '测试11', 'test11', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (20, '测试12', 'test12', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (21, '测试13', 'test13', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (22, '测试14', 'test14', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (23, '测试15', 'test15', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (24, '测试16', 'test16', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (25, '测试17', 'test17', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (26, '测试18', 'test18', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (27, '测试19', 'test19', '123456', '', 0, '2026-05-06 22:22:59');
-INSERT INTO `user` VALUES (28, '测试20', 'test20', '123456', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (1, '十三', '13700002703', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '我不怕千万人阻挡，只怕自己投降', 0, '2020-05-22 08:44:57');
+INSERT INTO `user` VALUES (6, '陈尼克', '13711113333', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '测试用户陈尼克', 0, '2020-05-22 08:44:57');
+INSERT INTO `user` VALUES (7, '张三1', '13864971605', '$2a$10$gNf2jStzgPL.nje3wbfqQeF7DID35BGBVEZwM4SCZW/w4d8g4vAe2', '这个人很勤快，但还是什么都没有写', 0, '2026-04-14 15:18:26');
+INSERT INTO `user` VALUES (8, '并非用户', '13864971606', '$2a$10$gNf2jStzgPL.nje3wbfqQeF7DID35BGBVEZwM4SCZW/w4d8g4vAe2', '214124', 0, '2026-05-03 15:21:45');
+INSERT INTO `user` VALUES (9, '测试01', 'test01', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (10, '测试02', 'test02', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (11, '测试03', 'test03', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (12, '测试04', 'test04', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (13, '测试05', 'test05', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (14, '测试06', 'test06', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (15, '测试07', 'test07', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (16, '测试08', 'test08', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (17, '测试09', 'test09', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (18, '测试10', 'test10', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (19, '测试11', 'test11', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (20, '测试12', 'test12', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (21, '测试13', 'test13', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (22, '测试14', 'test14', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (23, '测试15', 'test15', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (24, '测试16', 'test16', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (25, '测试17', 'test17', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (26, '测试18', 'test18', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (27, '测试19', 'test19', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
+INSERT INTO `user` VALUES (28, '测试20', 'test20', '$2a$10$JzIxgriY9BRfRZoXzTAqs.8HjSX0FpZJPZY0VB1ID4VTOF34G/WEW', '', 0, '2026-05-06 22:22:59');
 
 -- ----------------------------
 -- Table structure for user_address
@@ -615,7 +621,8 @@ CREATE TABLE `user_address`  (
   `detail_address` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '收件详细地址(街道/楼宇/单元)',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '添加时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_user_id` (`user_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '收货地址表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------

@@ -19,6 +19,7 @@ import java.util.List;
 @RestController("adminIndexConfigController")
 @RequestMapping("/api/admin/indexConfig")
 @Slf4j
+//管理端：首页配置（新品/热销/推荐）的管理
 public class IndexConfigController {
     @Resource
     private IndexConfigService indexConfigService;

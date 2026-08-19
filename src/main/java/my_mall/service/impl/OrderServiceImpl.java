@@ -1,7 +1,6 @@
 package my_mall.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
     @SneakyThrows
     @Override
     @Transactional
+    //创建订单：校验地址和购物车 → 扣库存算总价 → 写订单/订单项/地址 → 清购物车
     public String save(OrderDTO orderDTO) {
         Long addressId = orderDTO.getAddressId();
         List<Long> cartItemIds = orderDTO.getCartItemIds();
@@ -82,8 +82,6 @@ public class OrderServiceImpl implements OrderService {
         if(cartList==null|| cartList.isEmpty()){
             throw new CartItemNotExistException(MessageConstant.CART_EMPTY + "，购物车项ID：" + cartItemIds + "，操作用户ID：" + userId);
         }
-        List<StockDeductDTO> list = new ArrayList<>();
-
         Integer totalPrice = 0;
         for (OrderCartDTO cartItem : cartList) {
             Goods goods = goodsMapper.getById(cartItem.getGoodsId());
@@ -93,15 +91,14 @@ public class OrderServiceImpl implements OrderService {
             if (goods.getSellStatus()) {
                 throw new GoodsIsNotSellingException(MessageConstant.GOODS_NOT_SELLING + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，操作用户ID：" + userId);
             }
-            if (cartItem.getCount() > goods.getStockNum()) {
-                throw new StockNumNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，库存：" + goods.getStockNum() + "，操作用户ID：" + userId);
+            //扣减库存，rows=0 表示库存不足
+            int rows = goodsMapper.decreaseStock(goods.getId(), cartItem.getCount());
+            if (rows == 0) {
+                throw new StockNumNotEnoughException(MessageConstant.STOCK_NOT_ENOUGH + "，商品ID：" + cartItem.getGoodsId() + "，商品名称：" + cartItem.getGoodsName() + "，操作用户ID：" + userId);
             }
             totalPrice += cartItem.getCount() * goods.getSellingPrice();
             cartItem.setPrice(goods.getSellingPrice());
-            list.add(new StockDeductDTO(goods.getId(), cartItem.getCount()));
         }
-
-        goodsMapper.deductStock(list);
 
         Order order = new Order();
         order.setUserId(userId);
@@ -110,9 +107,11 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus(OrderStatusEnum.ORDER_PRE_PAY.getStatus());
         order.setPayType(OrderPayTypeEnum.NO_PAY.getValue());
         order.setExtraInfo("");
+        //雪花id生成唯一订单号
         order.setOrderNo(idGenerator.generateOrderNo());
         orderMapper.insert(order);
 
+        //把购物车项转成订单项，批量插入
         List<OrderItem> orderItemList = cartList.stream().map(x -> {
             OrderItem orderItem = new OrderItem();
             BeanUtils.copyProperties(x, orderItem);
@@ -134,6 +133,7 @@ public class OrderServiceImpl implements OrderService {
     @SneakyThrows
     @Override
     @Transactional
+    //取消订单：校验归属和状态 → 回补库存 → 改为关闭状态
     public void cancel(String orderNo) {
         Long userId=TLUtils.getUserId();
         Order order=orderMapper.getByOrderNo(orderNo);
@@ -147,6 +147,7 @@ public class OrderServiceImpl implements OrderService {
             throw new BaseException(MessageConstant.ORDER_CANNOT_CANCEL);
         }
 
+        //取消订单要回补库存
         List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
         List<StockDeductDTO> stockRecoverList = items.stream()
                 .map(item -> new StockDeductDTO(item.getGoodsId(), item.getCount()))
@@ -162,6 +163,7 @@ public class OrderServiceImpl implements OrderService {
     @SneakyThrows
     @Override
     @Transactional
+    //确认收货：校验归属和状态 → 改为交易成功
     public void confirm(String orderNo) {
         Long userId=TLUtils.getUserId();
         Order order=orderMapper.getByOrderNo(orderNo);
@@ -180,6 +182,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    //用户查订单详情（校验订单属于当前用户）
     public OrderDetailVO getOrderDetail(String orderNo) {
         Long userId = TLUtils.getUserId();
         Order order = orderMapper.getByOrderNo(orderNo);
@@ -193,6 +196,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    //用户分页查自己的订单
     public PageResult getPage(OrderPageDTO orderPageDTO) {
         Long userId = TLUtils.getUserId();
         PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
@@ -202,14 +206,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    //支付成功回调：校验归属和状态 → 改为已支付
     public void paySuccess(OrderPayDTO orderPayDTO) {
         Long userId=TLUtils.getUserId();
         Order order=orderMapper.getByOrderNo(orderPayDTO.getOrderNo());
         if (order == null) {
-            throw new OrderNotExistException("订单不存在");
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST);
         }
         if (!order.getUserId().equals(userId)) {
-            throw new PowerIsNotEnoughException("无权操作");
+            throw new PowerIsNotEnoughException(MessageConstant.POWER_NOT_ENOUGH);
         }
         if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PRE_PAY.getStatus())) {
             throw new BaseException(MessageConstant.ORDER_CANNOT_PAY);
@@ -223,10 +228,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    //配货完成（admin）：校验状态为已支付 → 批量改为配货完成
     public void checkDone(List<Long> orderIds) {
         List<Order> orders = orderMapper.getByIds(orderIds);
         if (orders == null || orders.isEmpty()) {
             throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
+        }
+        if (orders.size() != orderIds.size()) {
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，部分订单ID不存在，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
         }
 
         for (Order order : orders) {
@@ -240,10 +249,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    //出库（admin）：校验状态为配货完成 → 批量改为出库成功
     public void checkOut(List<Long> orderIds) {
         List<Order> orders = orderMapper.getByIds(orderIds);
         if (orders == null || orders.isEmpty()) {
             throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
+        }
+        if (orders.size() != orderIds.size()) {
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，部分订单ID不存在，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
         }
 
         for (Order order : orders) {
@@ -257,19 +270,22 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    //关闭订单（admin）：校验状态 → 回补库存 → 批量改为关闭
     public void closeOrder(List<Long> orderIds) {
         List<Order> orders = orderMapper.getByIds(orderIds);
         if (orders == null || orders.isEmpty()) {
             throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
         }
+        if (orders.size() != orderIds.size()) {
+            throw new OrderNotExistException(MessageConstant.ORDER_NOT_EXIST + "，部分订单ID不存在，订单ID列表：" + orderIds + "，操作用户ID：" + TLUtils.getUserId());
+        }
 
         for (Order order : orders) {
-            int status = order.getOrderStatus();
-            if (status != OrderStatusEnum.ORDER_PRE_PAY.getStatus() 
-                    && status != OrderStatusEnum.ORDER_PAID.getStatus()
-                    && status != OrderStatusEnum.ORDER_PACKAGED.getStatus()) {
+            //只有待支付订单能关闭（未付款，回补库存即可，无需退款）
+            if (!Objects.equals(order.getOrderStatus(), OrderStatusEnum.ORDER_PRE_PAY.getStatus())) {
                 throw new BaseException("订单" + order.getOrderNo() + MessageConstant.ORDER_CANNOT_CLOSE);
             }
+            //关闭订单前回补库存
             List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
             List<StockDeductDTO> stockRecoverList = items.stream()
                     .map(item -> new StockDeductDTO(item.getGoodsId(), item.getCount()))
@@ -281,12 +297,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    //admin 分页查所有用户的订单
     public PageResult aGetPage(OrderPageDTO orderPageDTO) {
         PageHelper.startPage(orderPageDTO.getPageNumber(), orderPageDTO.getPageSize());
         Page<Order> page = orderMapper.aGetByUserId(orderPageDTO);
         return buildPageResult(page);
     }
 
+    //组装一个订单详情：订单 + 订单项列表 + 收货地址
     private OrderDetailVO toDetailVO(Order order) {
         List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
         List<OrderCartDTO> cartDTOs = items.stream().map(item -> {
@@ -301,12 +319,23 @@ public class OrderServiceImpl implements OrderService {
         vo.setOrderAddress(orderAddressMapper.getByOrderId(order.getId()));
         return vo;
     }
-
+    //一批订单详情拼接（订单本身+订单详情+订单地址）
     private PageResult buildPageResult(Page<Order> page) {
+        if (page.getResult().isEmpty()) {
+            PageResult pageResult = new PageResult();
+            pageResult.setTotal(page.getTotal());
+            pageResult.setTotalPage(page.getPages());
+            pageResult.setRecords(Collections.emptyList());
+            return pageResult;
+        }
+        //批量查订单项和地址，避免逐个订单查询（N+1 问题）
         List<Long> ids = page.getResult().stream().map(Order::getId).collect(Collectors.toList());
         List<OrderItem> items = orderItemMapper.getBatchByOrderId(ids);
         Map<Long, List<OrderItem>> itemMap = items.stream()
                 .collect(Collectors.groupingBy(OrderItem::getOrderId));
+
+        Map<Long, OrderAddress> addressMap = orderAddressMapper.getByOrderIds(ids).stream()
+                .collect(Collectors.toMap(OrderAddress::getOrderId, a -> a, (a, b) -> a));
 
         List<OrderDetailVO> detailVOList = page.getResult().stream().map(order -> {
             OrderDetailVO vo = new OrderDetailVO();
@@ -318,7 +347,7 @@ public class OrderServiceImpl implements OrderService {
                 return dto;
             }).collect(Collectors.toList());
             vo.setOrderCartDTO(cartDTOs);
-            vo.setOrderAddress(orderAddressMapper.getByOrderId(order.getId()));
+            vo.setOrderAddress(addressMap.get(order.getId()));
             return vo;
         }).collect(Collectors.toList());
 
@@ -330,6 +359,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    //admin 查订单详情（不校验归属，可看所有订单）
     public OrderDetailVO aGetOrderDetail(String orderNo) {
         Order order = orderMapper.getByOrderNo(orderNo);
         if (order == null) {
@@ -337,5 +367,4 @@ public class OrderServiceImpl implements OrderService {
         }
         return toDetailVO(order);
     }
-
 }

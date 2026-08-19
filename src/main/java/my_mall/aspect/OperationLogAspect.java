@@ -29,6 +29,7 @@ public class OperationLogAspect {
         Method method = signature.getMethod();
         OperationLog operationLog=method.getAnnotation(OperationLog.class);
 
+        //把要记录到日志的数据用一个类集中管理
         OperationLogPO operationLogPO= OperationLogPO.builder()
                 .type(operationLog.type())
                 .recordParams(operationLog.recordParams())
@@ -38,7 +39,7 @@ public class OperationLogAspect {
                 .userId(TLUtils.getUserId())
                 .createTime(LocalDateTime.now())
                 .build();
-
+        //如果想要记录参数
         if(operationLog.recordParams()){
             String paramJson= JSONDataUtils.formatParams(joinPoint.getArgs());
             operationLogPO.setParams(paramJson);
@@ -49,6 +50,7 @@ public class OperationLogAspect {
         try{
 
             Object result = joinPoint.proceed();
+            //如果想要记录结果
             if(operationLog.recordResult()){
                 String resultJson= JSONDataUtils.formatResult(result);
                 operationLogPO.setResult(resultJson);

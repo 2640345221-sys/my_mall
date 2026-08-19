@@ -1,23 +1,26 @@
 package my_mall.task;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import my_mall.entity.po.SeckillGoods;
-import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.service.IndexConfigService;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import my_mall.service.SeckillGoodsService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import my_mall.constant.MessageConstant;
+import my_mall.entity.dto.StockDeductDTO;
 import my_mall.entity.po.Order;
+import my_mall.entity.po.OrderItem;
 import my_mall.enums.OrderStatusEnum;
 import my_mall.exception.AutoConfirmException;
 import my_mall.exception.TimeOutOrderException;
+import my_mall.mapper.GoodsMapper;
+import my_mall.mapper.OrderItemMapper;
 import my_mall.mapper.OrderMapper;
 
 @Component
@@ -26,12 +29,15 @@ public class MyTask {
     @Resource
     private OrderMapper orderMapper;
     @Resource
+    private OrderItemMapper orderItemMapper;
+    @Resource
+    private GoodsMapper goodsMapper;
+    @Resource
     private IndexConfigService indexConfigService;
     @Resource
-    private SeckillGoodsMapper seckillGoodsMapper;
-    @Resource(name = "stringRedisTemplate")
-    private StringRedisTemplate redisTemplate;
+    private SeckillGoodsService seckillGoodsService;
 
+    //定时关闭超时未支付的订单：待支付超过15分钟就改为关闭状态
     @Scheduled(cron = "0 */30 * * * ?")
     @Transactional
     public void processTimeoutOrder(){
@@ -39,20 +45,27 @@ public class MyTask {
             log.info("处理超时任务");
             List<Order> ordersList = orderMapper.getByStatusAndTime(OrderStatusEnum.ORDER_PRE_PAY.getStatus(), LocalDateTime.now().plusMinutes(-15));
 
-            ordersList.stream().forEach(order -> {
+            for (Order order : ordersList) {
+                //关闭超时订单前回补库存
+                List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
+                List<StockDeductDTO> stockRecoverList = items.stream()
+                        .map(item -> new StockDeductDTO(item.getGoodsId(), item.getCount()))
+                        .collect(Collectors.toList());
+                goodsMapper.recoverStock(stockRecoverList);
                 order.setUpdateTime(LocalDateTime.now());
                 order.setOrderStatus(OrderStatusEnum.ORDER_CLOSE_CONFIRM.getStatus());
-            });
+            }
 
             if(!ordersList.isEmpty()) {
                 orderMapper.updateBatch(ordersList);
                 log.info("成功关闭 {} 个超时订单", ordersList.size());
             }
         } catch (Exception e) {
-            throw new TimeOutOrderException("超时订单处理失败: " + e.getMessage());
+            throw new TimeOutOrderException(MessageConstant.ORDER_TIMEOUT_HANDLE_ERROR + ": " + e.getMessage());
         }
     }
 
+    //定时自动确认收货：已发货超过7天就改为交易完成
     @Scheduled(cron="0 0 1 * * ?")
     @Transactional
     public void processOrderComplete(){
@@ -70,10 +83,11 @@ public class MyTask {
                 log.info("成功完成 {} 个订单", ordersList.size());
             }
         } catch (Exception e) {
-            throw new AutoConfirmException("自动确认完成订单失败: " + e.getMessage());
+            throw new AutoConfirmException(MessageConstant.ORDER_AUTO_CONFIRM_ERROR + ": " + e.getMessage());
         }
     }
 
+    //定时重置首页配置：重新计算新品/热销/推荐商品
     @Scheduled(cron = "0 0 1 * * ?")
     public void resetIndexConfigTask() {
         log.info("开始执行首页配置重置任务");
@@ -81,16 +95,9 @@ public class MyTask {
         log.info("首页配置重置任务完成");
     }
 
-    @Scheduled(cron = "0 */30 * * * ?")
-    public void seckillGoodsResetTask() {
-        List<SeckillGoods> activeList = seckillGoodsMapper.selectActiveList();
-        for (SeckillGoods goods : activeList) {
-            String stockKey = "seckill:stock:" + goods.getId();
-            int stockInt=goods.getStockCount().intValue();
-            redisTemplate.opsForValue().set(stockKey, String.valueOf(stockInt), Duration.ofHours(2));
-            log.info("预热秒杀商品库存，ID: {}, 库存: {}", goods.getId(), goods.getStockCount());
-        }
+    //定时自动上下架秒杀活动：到开始时间自动启用并预热库存，到结束时间自动禁用并清库存
+    @Scheduled(cron = "0 * * * * ?")
+    public void seckillGoodsAutoUpdateStatus() {
+        seckillGoodsService.autoUpdateStatus();
     }
-
-
 }

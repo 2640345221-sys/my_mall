@@ -14,7 +14,7 @@ public class RabbitMQConfig {
 
     public static final String SECKILL_REQUEST_QUEUE = "seckill.request.queue";
     public static final String SECKILL_QUEUE = "seckill.order.queue";
-
+    //两个队列，一个是处理用户发送请求秒杀，另一个是解耦发送到后端去进行数据库的修改
     @Bean
     public Queue seckillRequestQueue() {
         return new Queue(SECKILL_REQUEST_QUEUE, true, false, false, Map.of("x-queue-mode", "lazy"));

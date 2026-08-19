@@ -54,11 +54,16 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     @Override
     public SeckillOrder result(Long seckillGoodsId) {
         Long userId = TLUtils.getUserId();
+        //先查秒杀失败标记（Redis），失败直接返回 status=-1
         String failKey = "seckill:fail:" + seckillGoodsId + ":" + userId;
         if (Boolean.TRUE.equals(redisTemplate.hasKey(failKey))) {
             return SeckillOrder.builder().status(-1).build();
         }
-        Long goodsId = seckillGoodsMapper.getById(seckillGoodsId).getGoodsId();
+        var seckillGoods = seckillGoodsMapper.getById(seckillGoodsId);
+        if (seckillGoods == null) {
+            throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
+        }
+        Long goodsId = seckillGoods.getGoodsId();
         SeckillOrder order = seckillOrderMapper.getByUserIdAndGoodsId(userId, goodsId);
         if (order == null) {
             log.info("用户 {} 未参与秒杀商品 {} 或未产生订单", userId, seckillGoodsId);

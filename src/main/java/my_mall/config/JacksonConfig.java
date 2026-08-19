@@ -19,11 +19,11 @@ import java.time.format.DateTimeFormatter;
 
 @Configuration
 public class JacksonConfig {
-
+    //对前端发来的时间的格式进行统一
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final String TIME_FORMAT = "HH:mm:ss";
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
+    //时间模块使用
     @Bean
     public ObjectMapper objectMapper() {
         JavaTimeModule javaTimeModule = new JavaTimeModule();
@@ -44,13 +44,14 @@ public class JacksonConfig {
         mapper.registerModule(javaTimeModule);
         return mapper;
     }
+    //序列化设置，注册时间模块，添加额外信息（确保转换正确）
     @Bean
     public GenericJackson2JsonRedisSerializer redisSerializer() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.activateDefaultTyping(
                 mapper.getPolymorphicTypeValidator(),
-                ObjectMapper.DefaultTyping.EVERYTHING);
+                ObjectMapper.DefaultTyping.EVERYTHING);//任何类型都添加额外类型说明
         return new GenericJackson2JsonRedisSerializer(mapper);
     }
 }

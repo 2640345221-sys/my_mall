@@ -9,6 +9,7 @@ public @interface OperationLog {
     String module() default "";
     String type() default "";
     String description() default "";
+    //是否记录参数和结果
     boolean recordParams() default false;
     boolean recordResult() default false;
 }

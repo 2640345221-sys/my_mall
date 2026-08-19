@@ -25,6 +25,7 @@ import my_mall.service.OrderService;
 @RestController("userOrderController")
 @RequestMapping("/api/user/order")
 @Slf4j
+//用户端：订单的创建、取消、确认收货、支付
 public class OrderController {
     @Resource
     private OrderService orderService;

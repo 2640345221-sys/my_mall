@@ -16,8 +16,8 @@ public class IndexConfig {
     private Long goodsId;
     private   LocalDateTime createTime;
     private  LocalDateTime updateTime;
-    private   Integer createUser;
-    private  Integer updateUser;
+    private   Long createUser;
+    private  Long updateUser;
     private   String redirectUrl;
     private   Integer rank;
 }

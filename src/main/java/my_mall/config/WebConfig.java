@@ -27,14 +27,18 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         log.info("开始注册拦截器");
+        //管理员只放行登录
         registry.addInterceptor(jwtTokenAdminInterceptor)
                 .addPathPatterns("/api/admin/**")
                 .excludePathPatterns("/api/admin/login");
-
+        //用户放行登录，注册，首页，商品和种类浏览
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/api/user/**")
                 .excludePathPatterns("/api/user/login")
-                .excludePathPatterns("/api/user/register");
+                .excludePathPatterns("/api/user/register")
+                .excludePathPatterns("/api/user/index/**")
+                .excludePathPatterns("/api/user/goods/**")
+                .excludePathPatterns("/api/user/category");
     }
 
     @Override

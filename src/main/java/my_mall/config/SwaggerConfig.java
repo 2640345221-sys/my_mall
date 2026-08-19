@@ -23,7 +23,7 @@ public class SwaggerConfig {
                         .version("1.0")
                         .description("My Mall 商城系统 API 接口文档")
                         .contact(new Contact()
-                                .name("刘一")
+                                .name("刘sir")
                                 .email("helin242348@163.com")))
                 .addSecurityItem(new SecurityRequirement().addList(TOKEN_HEADER))
                 .components(new Components()

@@ -1,27 +1,31 @@
 package my_mall.mapper;
 
 import com.github.pagehelper.Page;
-import io.swagger.v3.oas.annotations.Operation;
 import my_mall.annotation.OperationFill;
 import my_mall.entity.dto.PageDTO;
 import my_mall.entity.po.SeckillOrder;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
+//秒杀订单表的增删改查
 public interface SeckillOrderMapper {
 
     SeckillOrder getById(Long id);
     @OperationFill(fillCreateTime = true,fillUpdateTime = true)
     void insert(SeckillOrder seckillOrder);
 
-    void update(SeckillOrder seckillOrder);
-
-    void deleteById(Long id);
-
+    //管理员分页查秒杀订单
     Page<SeckillOrder> pageForAdmin(PageDTO pageDTO);
 
+    //用户分页查自己的秒杀订单
     Page<SeckillOrder> pageForUser(@Param("pageDTO") PageDTO pageDTO, @Param("userId") Long userId);
 
+    //按用户和商品查秒杀订单（判断是否已秒杀过）
     SeckillOrder getByUserIdAndGoodsId(Long userId, Long goodsId);
+
+    //回写秒杀订单关联的普通订单id
+    @Update("update my_mall.seckill_order set order_id = #{orderId} where id = #{id}")
+    void updateOrderId(@Param("id") Long id, @Param("orderId") Long orderId);
 }

@@ -17,6 +17,6 @@ public class GoodsCategory {
     private  Integer rank;
     private  LocalDateTime createTime;
     private  LocalDateTime updateTime;
-    private  Integer createUser;
-    private  Integer updateUser;
+    private  Long createUser;
+    private  Long updateUser;
 }

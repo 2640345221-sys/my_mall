@@ -20,6 +20,7 @@ import my_mall.service.GoodsService;
 @RestController("userGoodsController")
 @RequestMapping("/api/user/goods")
 @Slf4j
+//用户端：商品详情和搜索
 public class GoodsController {
     @Resource
     private GoodsService goodsService;

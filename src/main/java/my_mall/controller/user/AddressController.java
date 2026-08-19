@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.annotation.OperationLog;
-import my_mall.entity.dto.UserAddressDTO;
 import my_mall.entity.po.UserAddress;
 import my_mall.result.Result;
 import my_mall.service.AddressService;
@@ -25,6 +24,7 @@ import my_mall.service.AddressService;
 @RestController
 @RequestMapping("/api/user/address")
 @Slf4j
+//用户端：收货地址的增删改查
 public class AddressController {
     @Resource
     private AddressService addressService;
