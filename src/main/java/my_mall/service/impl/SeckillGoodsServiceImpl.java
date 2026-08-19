@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import my_mall.constant.JudgeConstant;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.SeckillGoodsPageDTO;
+import my_mall.entity.dto.StockDeductDTO;
 import my_mall.entity.po.Goods;
 import my_mall.entity.po.SeckillGoods;
 import my_mall.exception.SeckillException;
@@ -65,6 +66,11 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         }
         seckillGoods.setStatus(JudgeConstant.ENABLE);
         seckillGoodsMapper.insert(seckillGoods);
+        //预扣商品总库存：把秒杀数量从商品库存里切出来，库存不足则失败
+        int rows = goodsMapper.decreaseStock(goods.getId(), seckillGoods.getStockCount());
+        if (rows == 0) {
+            throw new SeckillException(MessageConstant.SECKILL_STOCK_INVALID);
+        }
         redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount().intValue()), Duration.ofHours(2));
         log.info("新增秒杀商品成功，ID：{}，商品ID：{}", seckillGoods.getId(), seckillGoods.getGoodsId());
     }
@@ -86,6 +92,20 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
                 seckillGoods.getStartTime().isAfter(seckillGoods.getEndTime())) {
             throw new SeckillException(MessageConstant.SECKILL_TIME_INVALID);
         }
+        //处理秒杀库存变更的商品库存差量
+        if (seckillGoods.getStockCount() != null && !seckillGoods.getStockCount().equals(existing.getStockCount())) {
+            int diff = seckillGoods.getStockCount() - existing.getStockCount();
+            if (diff > 0) {
+                //增加秒杀库存：需要再预扣商品库存，商品库存不够则失败
+                int rows = goodsMapper.decreaseStock(existing.getGoodsId(), diff);
+                if (rows == 0) {
+                    throw new SeckillException(MessageConstant.SECKILL_STOCK_INVALID);
+                }
+            } else {
+                //减少秒杀库存：回补商品库存
+                goodsMapper.recoverStock(List.of(new StockDeductDTO(existing.getGoodsId(), -diff)));
+            }
+        }
         seckillGoodsMapper.update(seckillGoods);
         if (seckillGoods.getStockCount() != null && !seckillGoods.getStockCount().equals(existing.getStockCount())) {
             redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount().intValue()), Duration.ofHours(2));
@@ -101,6 +121,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST + "，ID：" + id);
         }
         seckillGoodsMapper.deleteById(id);
+        //删除时回补剩余秒杀库存（先读 Redis 剩余，再删 Redis）
+        recoverStockToGoods(seckillGoods);
         redisTemplate.delete("seckill:stock:" + id);
         log.info("删除秒杀商品成功，ID：{}", id);
     }
@@ -136,6 +158,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         if (status == 1) {
             redisTemplate.opsForValue().set("seckill:stock:" + id, String.valueOf(existing.getStockCount().intValue()), Duration.ofHours(2));
         } else {
+            //禁用时回补剩余秒杀库存（先读 Redis 剩余，再删 Redis）
+            recoverStockToGoods(existing);
             redisTemplate.delete("seckill:stock:" + id);
         }
         log.info("修改秒杀商品状态成功，ID：{}，新状态：{}", id, status);
@@ -157,8 +181,43 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         List<SeckillGoods> toEndList = seckillGoodsMapper.selectToEnd();
         for (SeckillGoods goods : toEndList) {
             seckillGoodsMapper.updateStatus(goods.getId(), JudgeConstant.DISABLE);
+            //回补未卖完的秒杀库存到商品总库存
+            recoverStockToGoods(goods);
             redisTemplate.delete("seckill:stock:" + goods.getId());
             log.info("秒杀活动自动结束，ID：{}", goods.getId());
+        }
+    }
+
+    @Override
+    public void reconcileStock() {
+        //以 Redis 库存为准修正数据库库存（Redis 是最新值，数据库是异步落库的滞后值）
+        List<SeckillGoods> activeList = seckillGoodsMapper.selectActiveList();
+        for (SeckillGoods goods : activeList) {
+            String stockKey = "seckill:stock:" + goods.getId();
+            String redisStockStr = redisTemplate.opsForValue().get(stockKey);
+            if (redisStockStr == null) {
+                continue;
+            }
+            int redisStock = Integer.parseInt(redisStockStr);
+            int dbStock = goods.getStockCount();
+            if (redisStock != dbStock) {
+                seckillGoodsMapper.updateStock(goods.getId(), redisStock);
+                log.info("库存对账修正：秒杀商品ID={}, Redis库存={}, 数据库库存={}", goods.getId(), redisStock, dbStock);
+            }
+        }
+    }
+
+    //把剩余秒杀库存回补到商品总库存（方案B）：优先用 Redis 剩余库存（实时扣减后的准确值），避免把"还没落库的"也算进去
+    private void recoverStockToGoods(SeckillGoods goods) {
+        String redisStockStr = redisTemplate.opsForValue().get("seckill:stock:" + goods.getId());
+        int remain;
+        if (redisStockStr != null) {
+            remain = Integer.parseInt(redisStockStr);  // Redis 剩余 = 真正没卖掉的
+        } else {
+            remain = goods.getStockCount();  // Redis 过期了，退回用数据库值兜底
+        }
+        if (remain > 0) {
+            goodsMapper.recoverStock(List.of(new StockDeductDTO(goods.getGoodsId(), remain)));
         }
     }
 }

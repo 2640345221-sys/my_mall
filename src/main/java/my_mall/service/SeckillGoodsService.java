@@ -18,4 +18,6 @@ public interface SeckillGoodsService {
     void updateStatus(Long id,Integer status);
 
     void autoUpdateStatus();
+
+    void reconcileStock();
 }

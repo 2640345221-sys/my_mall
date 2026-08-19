@@ -43,4 +43,8 @@ public interface SeckillGoodsMapper {
     @Update("update my_mall.seckill_goods set stock_count =stock_count-#{count} where stock_count>=#{count} and id=#{id}")
     //扣减秒杀库存（带库存充足校验）
     int decreaseStock(@Param("id")Long id,@Param("count") Integer count);
+
+    //直接设置库存（对账时以 Redis 为准修正数据库）
+    @Update("update my_mall.seckill_goods set stock_count = #{stock} where id = #{id}")
+    void updateStock(@Param("id") Long id, @Param("stock") Integer stock);
 }

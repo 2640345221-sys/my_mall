@@ -100,4 +100,10 @@ public class MyTask {
     public void seckillGoodsAutoUpdateStatus() {
         seckillGoodsService.autoUpdateStatus();
     }
+
+    //定时对账：以 Redis 库存为准修正数据库库存（异步落库失败时兜底）
+    @Scheduled(cron = "0 */5 * * * ?")
+    public void seckillStockReconcile() {
+        seckillGoodsService.reconcileStock();
+    }
 }

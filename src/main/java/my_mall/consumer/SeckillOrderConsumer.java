@@ -69,6 +69,12 @@ public class SeckillOrderConsumer {
                 .build();
         orderMapper.insert(order);
 
+        //异步扣减数据库库存（秒杀时已扣 Redis，这里落库）
+        int rows = seckillGoodsMapper.decreaseStock(message.getSeckillGoodsId(), message.getCount());
+        if (rows == 0) {
+            throw new SeckillException(MessageConstant.SECKILL_STOCK_NOT_ENOUGH);
+        }
+
         //回写秒杀订单的 orderId，关联普通订单
         SeckillOrder seckillOrder = seckillOrderMapper.getByUserIdAndGoodsId(message.getUserId(), goods.getId());
         if (seckillOrder != null) {

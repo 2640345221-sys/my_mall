@@ -33,6 +33,8 @@ spring:
           initial-interval: 1000ms
           max-retries: 3
           multiplier: 2
+        #重试耗尽后不重新入队，直接进死信队列
+        default-requeue-rejected: false
         concurrency: 3
         max-concurrency: 5
   data:

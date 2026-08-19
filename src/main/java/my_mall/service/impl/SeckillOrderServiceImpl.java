@@ -29,7 +29,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     private SeckillGoodsMapper seckillGoodsMapper;
     @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate redisTemplate;
-
+    //管理员查询
     @Override
     public PageResult page(PageDTO pageDTO) {
         PageHelper.startPage(pageDTO.getPageNumber(), pageDTO.getPageSize());

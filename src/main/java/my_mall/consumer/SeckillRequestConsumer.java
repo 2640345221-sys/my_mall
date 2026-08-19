@@ -83,18 +83,14 @@ public class SeckillRequestConsumer {
             if (seckillGoods == null) {
                 throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
             }
-
+            //再次查看，是否真的是没有进行过秒杀操作
             SeckillOrder existing = seckillOrderMapper.getByUserIdAndGoodsId(userId, seckillGoods.getGoodsId());
             if (existing != null) {
                 redisTemplate.opsForValue().increment(stockKey, message.getCount());
                 return;
             }
 
-            int rows = seckillGoodsMapper.decreaseStock(seckillGoodsId, message.getCount());
-            if (rows == 0) {
-                throw new SeckillException(MessageConstant.SECKILL_STOCK_NOT_ENOUGH);
-            }
-
+            //秒杀时只扣 Redis，数据库库存由 SeckillOrderConsumer 异步落库
             SeckillOrder seckillOrder = SeckillOrder.builder()
                     .userId(userId)
                     .goodsId(seckillGoods.getGoodsId())
