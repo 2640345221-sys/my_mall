@@ -76,7 +76,7 @@ public class SeckillOrderConsumer {
         }
 
         //回写秒杀订单的 orderId，关联普通订单
-        SeckillOrder seckillOrder = seckillOrderMapper.getByUserIdAndGoodsId(message.getUserId(), goods.getId());
+        SeckillOrder seckillOrder = seckillOrderMapper.getByUserIdAndSeckillGoodsId(message.getUserId(), message.getSeckillGoodsId());
         if (seckillOrder != null) {
             seckillOrderMapper.updateOrderId(seckillOrder.getId(), order.getId());
         }

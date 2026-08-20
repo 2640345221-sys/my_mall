@@ -3,8 +3,8 @@ package my_mall.consumer;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.config.RabbitMQConfig;
-import my_mall.constant.JudgeConstant;
 import my_mall.constant.MessageConstant;
+import my_mall.enums.OrderStatusEnum;
 import my_mall.entity.dto.SeckillMessage;
 import my_mall.entity.po.SeckillOrder;
 import my_mall.exception.SeckillException;
@@ -49,6 +49,9 @@ public class SeckillRequestConsumer {
 
         log.info("处理秒杀请求: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
 
+        //新的秒杀请求先清掉上次的失败标记，否则结果查询会一直返回失败
+        redisTemplate.delete(failKey);
+
         // 分布式锁：同一秒杀商品同一时刻只有一个请求能扣库存，防止超卖
         RLock lock = redissonClient.getLock("seckill:lock:" + seckillGoodsId);
         boolean locked = false;
@@ -67,9 +70,19 @@ public class SeckillRequestConsumer {
                 return;
             }
 
-            // 查库存
+            // 查库存；key 因 TTL 过期缺失时从数据库兜底预热，避免长期活动中途全部失败
             String stockStr = redisTemplate.opsForValue().get(stockKey);
-            if (stockStr == null || Integer.parseInt(stockStr) < message.getCount()) {
+            if (stockStr == null) {
+                var goods = seckillGoodsMapper.getById(seckillGoodsId);
+                if (goods == null) {
+                    redisTemplate.opsForValue().set(failKey, "FAIL", Duration.ofHours(2));
+                    return;
+                }
+                stockStr = String.valueOf(goods.getStockCount().intValue());
+                redisTemplate.opsForValue().set(stockKey, stockStr, Duration.ofHours(2));
+                log.info("秒杀库存key过期缺失，从数据库预热: seckillGoodsId={}, stock={}", seckillGoodsId, stockStr);
+            }
+            if (Integer.parseInt(stockStr) < message.getCount()) {
                 log.warn("库存不足: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
                 redisTemplate.opsForValue().set(failKey, "FAIL", Duration.ofHours(2));
                 return;
@@ -97,7 +110,7 @@ public class SeckillRequestConsumer {
                 throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
             }
             //数据库层再次去重（Redis 的 userKey 有 TTL，过期后靠数据库兜底）
-            SeckillOrder existing = seckillOrderMapper.getByUserIdAndGoodsId(userId, seckillGoods.getGoodsId());
+            SeckillOrder existing = seckillOrderMapper.getByUserIdAndSeckillGoodsId(userId, message.getSeckillGoodsId());
             if (existing != null) {
                 redisTemplate.opsForValue().increment(stockKey, message.getCount());
                 redisTemplate.delete(userKey);
@@ -107,9 +120,10 @@ public class SeckillRequestConsumer {
             //秒杀时只扣 Redis，数据库库存由 SeckillOrderConsumer 异步落库
             SeckillOrder seckillOrder = SeckillOrder.builder()
                     .userId(userId)
-                    .goodsId(seckillGoods.getGoodsId())
+                    .seckillGoodsId(message.getSeckillGoodsId())
                     .orderId(0L)
-                    .status(JudgeConstant.ENABLE)
+                    //参考普通订单初始状态：待支付
+                    .status(OrderStatusEnum.ORDER_PRE_PAY.getStatus())
                     .build();
             seckillOrderMapper.insert(seckillOrder);
 

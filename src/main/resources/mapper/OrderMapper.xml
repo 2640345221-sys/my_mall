@@ -58,12 +58,21 @@
         <where>
             user_id=#{userId}
             <if test="orderPageDTO.orderStatus!=null">
-               and order_status=#{orderPageDTO.orderStatus}
+                <!-- -99 表示"已关闭"分组，包含已关闭(-1)与已取消(-3) -->
+                <choose>
+                    <when test="orderPageDTO.orderStatus == -99">
+                        and order_status in (-1, -3)
+                    </when>
+                    <otherwise>
+                        and order_status=#{orderPageDTO.orderStatus}
+                    </otherwise>
+                </choose>
             </if>
             <if test="orderPageDTO.orderNo!=null and orderPageDTO.orderNo!=''">
                 and order_no=#{orderPageDTO.orderNo}
             </if>
         </where>
+        order by create_time desc
     </select>
     <select id="aGetByUserId" resultType="my_mall.entity.po.Order">
         select * from my_mall.`order`

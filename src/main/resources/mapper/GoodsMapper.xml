@@ -99,6 +99,17 @@
                 and category_id=#{categoryId}
             </if>
         </where>
+        <choose>
+            <when test="orderBy=='price' and sort=='asc'">
+                order by selling_price asc
+            </when>
+            <when test="orderBy=='price' and sort=='desc'">
+                order by selling_price desc
+            </when>
+            <otherwise>
+                order by create_time desc
+            </otherwise>
+        </choose>
     </select>
     <select id="page" resultType="my_mall.entity.po.Goods">
         select * from my_mall.goods

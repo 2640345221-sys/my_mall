@@ -22,10 +22,17 @@ public interface SeckillOrderMapper {
     //用户分页查自己的秒杀订单
     Page<SeckillOrder> pageForUser(@Param("pageDTO") PageDTO pageDTO, @Param("userId") Long userId);
 
-    //按用户和商品查秒杀订单（判断是否已秒杀过）
-    SeckillOrder getByUserIdAndGoodsId(Long userId, Long goodsId);
+    //按用户和秒杀活动查秒杀订单（判断是否已秒杀过）
+    SeckillOrder getByUserIdAndSeckillGoodsId(Long userId, Long seckillGoodsId);
+
+    //按关联的普通订单id查秒杀订单（取消订单时恢复秒杀库存）
+    SeckillOrder getByOrderId(Long orderId);
 
     //回写秒杀订单关联的普通订单id
     @Update("update my_mall.seckill_order set order_id = #{orderId} where id = #{id}")
     void updateOrderId(@Param("id") Long id, @Param("orderId") Long orderId);
+
+    //更新秒杀订单状态（取消订单时标记为已取消）
+    @Update("update my_mall.seckill_order set status = #{status} where id = #{id}")
+    void updateStatus(@Param("id") Long id, @Param("status") Integer status);
 }

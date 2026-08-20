@@ -11,6 +11,7 @@ public class GoodsPageSearchDTO {
     private String keyword;
     private  Integer categoryId;
     private  String orderBy;
+    private  String sort;
     private Integer pageNumber = 1;
     private Integer pageSize = 10;
 }

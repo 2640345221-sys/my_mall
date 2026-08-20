@@ -3,6 +3,7 @@ package my_mall.mapper;
 import com.github.pagehelper.Page;
 import my_mall.entity.dto.SeckillGoodsPageDTO;
 import my_mall.entity.po.SeckillGoods;
+import my_mall.entity.vo.SeckillGoodsVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -32,6 +33,15 @@ public interface SeckillGoodsMapper {
     @Select("select * from my_mall.seckill_goods where start_time<=Now() and end_time>=Now()")
     List<SeckillGoods> selectActiveList();
 
+    //查进行中的秒杀商品（join 商品基础信息），供用户端浏览
+    @Select("select sg.id, sg.goods_id, g.name as goods_name, g.cover_img, g.selling_price as original_price, " +
+            "sg.seckill_price, sg.stock_count, sg.start_time, sg.end_time, sg.status " +
+            "from my_mall.seckill_goods sg " +
+            "left join my_mall.goods g on sg.goods_id = g.id " +
+            "where sg.status = 1 and sg.start_time <= Now() and sg.end_time >= Now() " +
+            "order by sg.start_time asc")
+    List<SeckillGoodsVO> selectActiveListWithGoods();
+
     //查到开始时间但还没启用的秒杀商品
     @Select("select * from my_mall.seckill_goods where start_time<=Now() and status=0")
     List<SeckillGoods> selectToStart();
@@ -43,6 +53,10 @@ public interface SeckillGoodsMapper {
     @Update("update my_mall.seckill_goods set stock_count =stock_count-#{count} where stock_count>=#{count} and id=#{id}")
     //扣减秒杀库存（带库存充足校验）
     int decreaseStock(@Param("id")Long id,@Param("count") Integer count);
+
+    @Update("update my_mall.seckill_goods set stock_count = stock_count + #{count} where id = #{id}")
+    //回补秒杀库存（取消秒杀订单时）
+    int increaseStock(@Param("id") Long id, @Param("count") Integer count);
 
     //直接设置库存（对账时以 Redis 为准修正数据库）
     @Update("update my_mall.seckill_goods set stock_count = #{stock} where id = #{id}")

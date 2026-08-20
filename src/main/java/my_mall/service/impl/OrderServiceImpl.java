@@ -1,5 +1,6 @@
 package my_mall.service.impl;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
 import my_mall.utils.IdGenerator;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.OrderCartDTO;
 import my_mall.entity.dto.OrderDTO;
@@ -27,6 +30,7 @@ import my_mall.entity.po.Goods;
 import my_mall.entity.po.Order;
 import my_mall.entity.po.OrderAddress;
 import my_mall.entity.po.OrderItem;
+import my_mall.entity.po.SeckillOrder;
 import my_mall.entity.po.UserAddress;
 import my_mall.entity.vo.OrderDetailVO;
 import my_mall.enums.OrderPayStatusEnum;
@@ -45,12 +49,15 @@ import my_mall.mapper.GoodsMapper;
 import my_mall.mapper.OrderAddressMapper;
 import my_mall.mapper.OrderItemMapper;
 import my_mall.mapper.OrderMapper;
+import my_mall.mapper.SeckillGoodsMapper;
+import my_mall.mapper.SeckillOrderMapper;
 import my_mall.mapper.ShoppingCartMapper;
 import my_mall.result.PageResult;
 import my_mall.service.OrderService;
 import my_mall.utils.TLUtils;
 
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
     @Resource
     private OrderMapper orderMapper;
@@ -64,6 +71,12 @@ public class OrderServiceImpl implements OrderService {
     private GoodsMapper goodsMapper;
     @Resource
     private ShoppingCartMapper shoppingCartMapper;
+    @Resource
+    private SeckillOrderMapper seckillOrderMapper;
+    @Resource
+    private SeckillGoodsMapper seckillGoodsMapper;
+    @Resource(name = "stringRedisTemplate")
+    private StringRedisTemplate redisTemplate;
     @Resource
     private IdGenerator idGenerator;
     @SneakyThrows
@@ -147,12 +160,29 @@ public class OrderServiceImpl implements OrderService {
             throw new BaseException(MessageConstant.ORDER_CANNOT_CANCEL);
         }
 
-        //取消订单要回补库存
         List<OrderItem> items = orderItemMapper.getByOrderId(order.getId());
-        List<StockDeductDTO> stockRecoverList = items.stream()
-                .map(item -> new StockDeductDTO(item.getGoodsId(), item.getCount()))
-                .collect(Collectors.toList());
-        goodsMapper.recoverStock(stockRecoverList);
+        //取消秒杀订单：只恢复秒杀库存，不回补商品库存（商品库存的活动预扣由秒杀结束时的 recoverStockToGoods 统一回补，避免重复回补）
+        SeckillOrder seckillOrder = seckillOrderMapper.getByOrderId(order.getId());
+        if (seckillOrder != null) {
+            if (!items.isEmpty()) {
+                int count = items.get(0).getCount();
+                seckillGoodsMapper.increaseStock(seckillOrder.getSeckillGoodsId(), count);
+                String stockKey = "seckill:stock:" + seckillOrder.getSeckillGoodsId();
+                redisTemplate.opsForValue().increment(stockKey, count);
+                redisTemplate.expire(stockKey, Duration.ofHours(2));
+                //参考普通订单取消状态：取消订单关闭(-3)
+                seckillOrderMapper.updateStatus(seckillOrder.getId(), OrderStatusEnum.ORDER_CLOSE_CANCEL.getStatus());
+                redisTemplate.delete("seckill:user:" + seckillOrder.getSeckillGoodsId() + ":" + order.getUserId());
+                log.info("取消秒杀订单，恢复秒杀库存并标记取消: orderId={}, seckillGoodsId={}, count={}",
+                        order.getId(), seckillOrder.getSeckillGoodsId(), count);
+            }
+        } else {
+            //普通订单取消：回补商品库存
+            List<StockDeductDTO> stockRecoverList = items.stream()
+                    .map(item -> new StockDeductDTO(item.getGoodsId(), item.getCount()))
+                    .collect(Collectors.toList());
+            goodsMapper.recoverStock(stockRecoverList);
+        }
 
         order.setOrderStatus(OrderStatusEnum.ORDER_CLOSE_CONFIRM.getStatus());
         order.setOrderNo(orderNo);

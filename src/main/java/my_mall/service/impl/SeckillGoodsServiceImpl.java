@@ -15,6 +15,7 @@ import my_mall.entity.po.SeckillGoods;
 import my_mall.exception.SeckillException;
 import my_mall.mapper.GoodsMapper;
 import my_mall.mapper.SeckillGoodsMapper;
+import my_mall.entity.vo.SeckillGoodsVO;
 import my_mall.result.PageResult;
 import my_mall.service.SeckillGoodsService;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -160,6 +161,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         } else {
             //禁用时回补剩余秒杀库存（先读 Redis 剩余，再删 Redis）
             recoverStockToGoods(existing);
+            //剩余已回补商品，本次活动库存归零
+            seckillGoodsMapper.updateStock(id, 0);
             redisTemplate.delete("seckill:stock:" + id);
         }
         log.info("修改秒杀商品状态成功，ID：{}，新状态：{}", id, status);
@@ -183,6 +186,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             seckillGoodsMapper.updateStatus(goods.getId(), JudgeConstant.DISABLE);
             //回补未卖完的秒杀库存到商品总库存
             recoverStockToGoods(goods);
+            //剩余已回补商品，本次活动库存归零
+            seckillGoodsMapper.updateStock(goods.getId(), 0);
             redisTemplate.delete("seckill:stock:" + goods.getId());
             log.info("秒杀活动自动结束，ID：{}", goods.getId());
         }
@@ -205,6 +210,11 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
                 log.info("库存对账修正：秒杀商品ID={}, Redis库存={}, 数据库库存={}", goods.getId(), redisStock, dbStock);
             }
         }
+    }
+
+    @Override
+    public List<SeckillGoodsVO> listActiveForUser() {
+        return seckillGoodsMapper.selectActiveListWithGoods();
     }
 
     //把剩余秒杀库存回补到商品总库存（方案B）：优先用 Redis 剩余库存（实时扣减后的准确值），避免把"还没落库的"也算进去

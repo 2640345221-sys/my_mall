@@ -34,6 +34,9 @@
             <if test="locked!=null">
                 locked=#{locked}
             </if>
+            <if test="keyword!=null and keyword!=''">
+                and (login_name like concat('%',#{keyword},'%') or nick_name like concat('%',#{keyword},'%'))
+            </if>
         </where>
     </select>
     <select id="getByLoginName" resultType="my_mall.entity.po.User">

@@ -6,6 +6,7 @@
     <resultMap id="BaseResultMap" type="my_mall.entity.po.SeckillGoods">
         <id column="id" property="id"/>
         <result column="goods_id" property="goodsId"/>
+        <result column="goods_name" property="goodsName"/>
         <result column="seckill_price" property="seckillPrice"/>
         <result column="stock_count" property="stockCount"/>
         <result column="start_time" property="startTime"/>
@@ -42,7 +43,7 @@
     </select>
 
     <select id="pageQuery" resultMap="BaseResultMap">
-        SELECT sg.* FROM my_mall.seckill_goods sg
+        SELECT sg.*, g.name AS goods_name FROM my_mall.seckill_goods sg
         LEFT JOIN my_mall.goods g ON sg.goods_id = g.id
         <where>
             <if test="goodsName != null and goodsName != ''">

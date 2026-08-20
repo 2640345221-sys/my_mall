@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class SeckillOrder {
     private Long id;
     private Long userId;
-    private Long goodsId;
+    private Long seckillGoodsId;
     private Long orderId;
     private Integer status;
     private LocalDateTime createTime;

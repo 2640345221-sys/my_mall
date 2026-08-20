@@ -42,6 +42,7 @@
         from my_mall.shopping_cart as sc
                  left join my_mall.goods as g on sc.goods_id = g.id
         where sc.user_id = #{userId}
+        order by sc.create_time desc
     </select>
     <select id="getCartItem" resultType="my_mall.entity.vo.ShoppingCartItemVO">
         select sc.id as cartitemId,sc.goods_count,g.cover_img,sc.goods_id, g.name as goodsName,

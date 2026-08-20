@@ -9,7 +9,6 @@ import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.PageDTO;
 import my_mall.entity.po.SeckillOrder;
 import my_mall.exception.SeckillException;
-import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.mapper.SeckillOrderMapper;
 import my_mall.result.PageResult;
 import my_mall.service.SeckillOrderService;
@@ -25,8 +24,6 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
 
     @Resource
     private SeckillOrderMapper seckillOrderMapper;
-    @Resource
-    private SeckillGoodsMapper seckillGoodsMapper;
     @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate redisTemplate;
     //管理员查询
@@ -59,12 +56,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
         if (Boolean.TRUE.equals(redisTemplate.hasKey(failKey))) {
             return SeckillOrder.builder().status(-1).build();
         }
-        var seckillGoods = seckillGoodsMapper.getById(seckillGoodsId);
-        if (seckillGoods == null) {
-            throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
-        }
-        Long goodsId = seckillGoods.getGoodsId();
-        SeckillOrder order = seckillOrderMapper.getByUserIdAndGoodsId(userId, goodsId);
+        SeckillOrder order = seckillOrderMapper.getByUserIdAndSeckillGoodsId(userId, seckillGoodsId);
         if (order == null) {
             log.info("用户 {} 未参与秒杀商品 {} 或未产生订单", userId, seckillGoodsId);
             return null;

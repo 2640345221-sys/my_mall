@@ -2,7 +2,10 @@ package my_mall.service;
 
 import my_mall.entity.dto.SeckillGoodsPageDTO;
 import my_mall.entity.po.SeckillGoods;
+import my_mall.entity.vo.SeckillGoodsVO;
 import my_mall.result.PageResult;
+
+import java.util.List;
 
 public interface SeckillGoodsService {
     void save(SeckillGoods seckillGoods);
@@ -20,4 +23,7 @@ public interface SeckillGoodsService {
     void autoUpdateStatus();
 
     void reconcileStock();
+
+    //用户端：查进行中的秒杀商品列表
+    List<SeckillGoodsVO> listActiveForUser();
 }
