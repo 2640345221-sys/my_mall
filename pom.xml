@@ -30,12 +30,11 @@
         <java.version>17</java.version>
     </properties>
     <dependencies>
-        <!-- Source: https://mvnrepository.com/artifact/org.redisson/redisson-spring-boot-starter -->
+        <!-- Redisson：分布式锁（定时任务去重、缓存击穿防护） -->
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
             <version>4.1.0</version>
-            <scope>compile</scope>
         </dependency>
         <!-- JDBC：数据库连接 -->
         <dependency>

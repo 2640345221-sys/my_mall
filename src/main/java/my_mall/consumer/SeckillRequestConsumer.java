@@ -10,33 +10,27 @@ import my_mall.entity.po.SeckillOrder;
 import my_mall.exception.SeckillException;
 import my_mall.mapper.SeckillGoodsMapper;
 import my_mall.mapper.SeckillOrderMapper;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
 public class SeckillRequestConsumer {
 
-    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
-
-    static {
-        SECKILL_SCRIPT = new DefaultRedisScript<>();
-        SECKILL_SCRIPT.setLocation(new ClassPathResource("lua/seckill.lua"));
-        SECKILL_SCRIPT.setResultType(Long.class);
-    }
-
     @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate redisTemplate;
+    @Resource
+    private RedissonClient redissonClient;
     @Resource
     private RabbitTemplate rabbitTemplate;
     @Resource
@@ -51,42 +45,62 @@ public class SeckillRequestConsumer {
         Long seckillGoodsId = message.getSeckillGoodsId();
         String stockKey = "seckill:stock:" + seckillGoodsId;
         String userKey = "seckill:user:" + seckillGoodsId + ":" + userId;
+        String failKey = "seckill:fail:" + seckillGoodsId + ":" + userId;
 
         log.info("处理秒杀请求: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
 
-        Long result = redisTemplate.execute(
-                SECKILL_SCRIPT,
-                List.of(stockKey, userKey),
-                String.valueOf(message.getCount()),
-                String.valueOf(Duration.ofHours(1).getSeconds())
-        );
+        // 分布式锁：同一秒杀商品同一时刻只有一个请求能扣库存，防止超卖
+        RLock lock = redissonClient.getLock("seckill:lock:" + seckillGoodsId);
+        boolean locked = false;
+        try {
+            try {
+                locked = lock.tryLock(3, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("获取秒杀锁被中断: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+                redisTemplate.opsForValue().set(failKey, "FAIL", Duration.ofHours(2));
+                return;
+            }
+            if (!locked) {
+                log.warn("获取秒杀锁失败: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+                redisTemplate.opsForValue().set(failKey, "FAIL", Duration.ofHours(2));
+                return;
+            }
 
-        if (result == null) {
-            log.error("Lua 脚本执行异常: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
-            redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
-            return;
+            // 查库存
+            String stockStr = redisTemplate.opsForValue().get(stockKey);
+            if (stockStr == null || Integer.parseInt(stockStr) < message.getCount()) {
+                log.warn("库存不足: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+                redisTemplate.opsForValue().set(failKey, "FAIL", Duration.ofHours(2));
+                return;
+            }
+
+            // 查重复
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(userKey))) {
+                log.warn("重复秒杀: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
+                return;
+            }
+
+            // 扣库存 + 标记用户已秒杀
+            redisTemplate.opsForValue().decrement(stockKey, message.getCount());
+            redisTemplate.opsForValue().set(userKey, "1", Duration.ofHours(1));
+        } finally {
+            if (locked && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
 
-        if (result == -1) {
-            log.warn("库存不足: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
-            redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
-            return;
-        }
-
-        if (result == -2) {
-            log.warn("重复秒杀: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
-            return;
-        }
-
+        // 锁外：写秒杀订单（数据库操作放锁外，减少锁持有时间）
         try {
             var seckillGoods = seckillGoodsMapper.getById(seckillGoodsId);
             if (seckillGoods == null) {
                 throw new SeckillException(MessageConstant.SECKILL_GOODS_NOT_EXIST);
             }
-            //再次查看，是否真的是没有进行过秒杀操作
+            //数据库层再次去重（Redis 的 userKey 有 TTL，过期后靠数据库兜底）
             SeckillOrder existing = seckillOrderMapper.getByUserIdAndGoodsId(userId, seckillGoods.getGoodsId());
             if (existing != null) {
                 redisTemplate.opsForValue().increment(stockKey, message.getCount());
+                redisTemplate.delete(userKey);
                 return;
             }
 
@@ -110,7 +124,7 @@ public class SeckillRequestConsumer {
             log.error("秒杀处理异常: userId={}, seckillGoodsId={}", userId, seckillGoodsId, e);
             redisTemplate.opsForValue().increment(stockKey, message.getCount());
             redisTemplate.delete(userKey);
-            redisTemplate.opsForValue().set("seckill:fail:" + seckillGoodsId + ":" + userId, "FAIL", Duration.ofHours(2));
+            redisTemplate.opsForValue().set(failKey, "FAIL", Duration.ofHours(2));
         }
     }
 }

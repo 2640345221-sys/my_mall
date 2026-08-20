@@ -41,6 +41,7 @@ spring:
     redis:
       host: ${kkek.redis.host}
       port: ${kkek.redis.port}
+      password: ${kkek.redis.password}
       database: ${kkek.redis.database}
 mybatis:
   mapper-locations: classpath:mapper/*.xml
