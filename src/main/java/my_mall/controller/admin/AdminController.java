@@ -10,6 +10,7 @@ import my_mall.constant.MessageConstant;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -62,7 +63,7 @@ public class AdminController {
     @PutMapping("/update")
     @OperationLog(module="管理员模块",type = "更新" ,description = "更新管理员信息",
             recordParams = true,recordResult = true)
-    public Result update(AdminUpdateDTO adminUpdateDTO){
+    public Result update(@RequestBody AdminUpdateDTO adminUpdateDTO){
         adminService.update(adminUpdateDTO);
         return Result.success();
     }

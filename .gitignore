@@ -35,5 +35,8 @@ build/
 ### Claude Code ###
 .claude/
 
+### 本地自测脚本与日志 ###
+selftest/
+
 ### 文档 ###
 *.docx

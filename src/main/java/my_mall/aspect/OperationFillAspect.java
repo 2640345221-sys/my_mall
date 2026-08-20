@@ -1,6 +1,5 @@
 package my_mall.aspect;
 
-import lombok.SneakyThrows;
 import my_mall.annotation.OperationFill;
 import my_mall.utils.TLUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -58,10 +57,28 @@ public class OperationFillAspect {
         }
     }
 
-    @SneakyThrows
     private void setFieldValue(Object arg, Class<?> clazz, String fieldName, Object value) {
-        Field field = clazz.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(arg, value);
+        //非实体参数（如 Integer sellStatus、List ids）没有这些字段，直接跳过
+        Field field = findField(clazz, fieldName);
+        if (field == null) {
+            return;
+        }
+        try {
+            field.setAccessible(true);
+            field.set(arg, value);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //沿父类向上查找字段，找不到返回 null
+    private Field findField(Class<?> clazz, String fieldName) {
+        for (Class<?> c = clazz; c != null && c != Object.class; c = c.getSuperclass()) {
+            try {
+                return c.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException ignored) {
+            }
+        }
+        return null;
     }
 }
