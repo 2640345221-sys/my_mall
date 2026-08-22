@@ -26,8 +26,12 @@ public class AddressServiceImpl implements AddressService {
     @Transactional(rollbackFor = Exception.class)
     public void insert(UserAddress userAddress) {
         userAddress.setUserId(TLUtils.getUserId());
+        //未传 isDefault 时默认非默认地址，避免 null 落库
+        if(userAddress.getIsDefault() == null){
+            userAddress.setIsDefault(false);
+        }
         //前端可以设置新的地址为默认地址 如果默认则执行下面的代码
-        if(userAddress.getIsDefault()){
+        if(Boolean.TRUE.equals(userAddress.getIsDefault())){
             addressMapper.cancelDefault(userAddress.getUserId());
         }
         addressMapper.insert(userAddress);
@@ -79,7 +83,7 @@ public class AddressServiceImpl implements AddressService {
         if(!Objects.equals(address.getUserId(), userId)){
             throw new AddressNotBelongException(MessageConstant.ADDRESS_NOT_BELONG + "，地址ID：" + userAddress.getId() + "，地址用户ID：" + address.getUserId() + "，操作用户ID：" + userId);
         }
-        if(userAddress.getIsDefault()){
+        if(Boolean.TRUE.equals(userAddress.getIsDefault())){
             addressMapper.cancelDefault(userId);
         }
         BeanUtils.copyProperties(userAddress,address);

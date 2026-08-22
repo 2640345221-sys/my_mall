@@ -4,8 +4,14 @@
 <mapper namespace="my_mall.mapper.AddressMapper">
 
     <insert id="insert">
-        insert into my_mall.user_address(user_id, username, user_phone, is_default, province, city, region, detail_address, create_time, update_time)
-        value(#{userId},#{username},#{userPhone},#{isDefault},#{province},#{city},#{region},#{detailAddress},#{createTime},#{updateTime})
+        insert into my_mall.user_address(user_id, username, user_phone, is_default, province, city, region, detail_address
+        <if test="createTime != null">, create_time</if>
+        <if test="updateTime != null">, update_time</if>
+        )
+        value(#{userId},#{username},#{userPhone},#{isDefault},#{province},#{city},#{region},#{detailAddress}
+        <if test="createTime != null">,#{createTime}</if>
+        <if test="updateTime != null">,#{updateTime}</if>
+        )
     </insert>
     <update id="update">
         update my_mall.user_address

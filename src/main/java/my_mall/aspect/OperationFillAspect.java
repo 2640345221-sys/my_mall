@@ -49,10 +49,11 @@ public class OperationFillAspect {
         if(operationFill.fillUpdateTime()){
             setFieldValue(arg,clazz,"updateTime",now);
         }
-        if(operationFill.fillCreateUser()){
+        //未登录（如被拦截器排除的公开路径）时 userId 为空，跳过用户字段，避免把 null 落库
+        if(operationFill.fillCreateUser() && userId != null){
             setFieldValue(arg,clazz,"createUser",userId);
         }
-        if(operationFill.fillUpdateUser()){
+        if(operationFill.fillUpdateUser() && userId != null){
             setFieldValue(arg,clazz,"updateUser",userId);
         }
     }

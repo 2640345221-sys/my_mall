@@ -38,7 +38,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/user/register")
                 .excludePathPatterns("/api/user/index/**")
                 .excludePathPatterns("/api/user/goods/**")
-                .excludePathPatterns("/api/user/category");
+                .excludePathPatterns("/api/user/category")
+                .excludePathPatterns("/api/user/seckill/**");
     }
 
     @Override

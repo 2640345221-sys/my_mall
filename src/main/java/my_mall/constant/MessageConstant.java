@@ -49,4 +49,10 @@ public class MessageConstant {
     public static final String SECKILL_STOCK_NOT_ENOUGH = "库存不足";
     public static final String RESOURCE_NOT_EXIST = "资源不存在";
     public static final String SERVER_INTERNAL_ERROR = "服务器内部错误，请稍后重试";
+    public static final String METHOD_NOT_SUPPORTED = "请求方法不支持";
+    public static final String USERNAME_EMPTY = "用户名不能为空";
+    public static final String USERNAME_TOO_LONG = "用户名长度不能超过11个字符";
+    public static final String PARAM_INVALID = "参数不合法";
+    public static final String JSON_PARSE_ERROR = "请求体格式错误，请检查JSON格式";
+    public static final String DATA_INTEGRITY_ERROR = "数据不合法：可能存在超长字段或违反唯一约束";
 }

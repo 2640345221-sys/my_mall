@@ -26,8 +26,6 @@ public interface ShoppingCartMapper {
 
     void deleteById(Long cartItemId);
 
-    ShoppingCartItemVO getCartItem(Long cartItemId);
-
     //查购物车项并带上商品信息
     List<OrderCartDTO> getWithGoods(List<Long> cartItemIds, Long userId);
 

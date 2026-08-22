@@ -10,6 +10,7 @@ import my_mall.entity.dto.LoginDTO;
 import my_mall.entity.dto.UserPageDTO;
 import my_mall.entity.po.User;
 import my_mall.entity.vo.UserVO;
+import my_mall.exception.BaseException;
 import my_mall.exception.PasswordErrorException;
 import my_mall.exception.RepeatKeyException;
 import my_mall.exception.UserIsLockedException;
@@ -55,6 +56,12 @@ public class UserServiceImpl  implements UserService {
     @Override
     public void register(LoginDTO loginDTO) {
         String nickName = "user" + IdUtil.getSnowflake().nextIdStr();
+        if (loginDTO.getUsername() == null || loginDTO.getUsername().trim().isEmpty()) {
+            throw new BaseException(MessageConstant.USERNAME_EMPTY);
+        }
+        if (loginDTO.getUsername().length() > 11) {
+            throw new BaseException(MessageConstant.USERNAME_TOO_LONG);
+        }
         if(userMapper.getByLoginName(loginDTO.getUsername()) != null){
             throw new RepeatKeyException(MessageConstant.USERNAME_EXIST + "，用户名：" + loginDTO.getUsername() + "，操作用户ID：" + TLUtils.getUserId());
         }

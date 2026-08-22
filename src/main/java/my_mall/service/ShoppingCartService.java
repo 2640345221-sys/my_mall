@@ -2,9 +2,7 @@ package my_mall.service;
 
 import my_mall.entity.dto.CartItemDTO;
 import my_mall.entity.dto.ShoppingCartDTO;
-import my_mall.entity.dto.ShoppingCartItemDTO;
 import my_mall.entity.dto.ShoppingCartPageDTO;
-import my_mall.entity.vo.ShoppingCartItemVO;
 import my_mall.result.PageResult;
 
 public interface ShoppingCartService {
@@ -15,6 +13,4 @@ public interface ShoppingCartService {
     void update(ShoppingCartDTO cartItemDTO);
 
     void delete(Long cartItemId);
-
-    ShoppingCartItemVO getCartItem(ShoppingCartItemDTO cartItemDTO);
 }

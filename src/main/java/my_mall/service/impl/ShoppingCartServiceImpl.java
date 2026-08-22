@@ -13,7 +13,6 @@ import lombok.SneakyThrows;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.CartItemDTO;
 import my_mall.entity.dto.ShoppingCartDTO;
-import my_mall.entity.dto.ShoppingCartItemDTO;
 import my_mall.entity.dto.ShoppingCartPageDTO;
 import my_mall.entity.po.Goods;
 import my_mall.entity.po.ShoppingCart;
@@ -103,11 +102,5 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             throw new PowerIsNotEnoughException(MessageConstant.POWER_NOT_ENOUGH_CART + "，购物车项ID：" + cartItemId + "，购物车用户ID：" + cart.getUserId() + "，操作用户ID：" + userId);
         }
         shoppingCartMapper.deleteById(cartItemId);
-    }
-
-    @Override
-    public ShoppingCartItemVO getCartItem(ShoppingCartItemDTO cartItemDTO) {
-        Long cartItemId = cartItemDTO.getCartItemId();
-        return shoppingCartMapper.getCartItem(cartItemId);
     }
 }
