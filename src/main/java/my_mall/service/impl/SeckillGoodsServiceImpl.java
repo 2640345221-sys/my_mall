@@ -15,6 +15,7 @@ import my_mall.entity.po.SeckillGoods;
 import my_mall.exception.SeckillException;
 import my_mall.mapper.GoodsMapper;
 import my_mall.mapper.SeckillGoodsMapper;
+import my_mall.mapper.SeckillOrderMapper;
 import my_mall.entity.vo.SeckillGoodsVO;
 import my_mall.result.PageResult;
 import my_mall.service.SeckillGoodsService;
@@ -34,6 +35,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
     private GoodsMapper goodsMapper;
     @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate redisTemplate;
+    @Resource
+    private SeckillOrderMapper seckillOrderMapper;
 
 
     @PostConstruct
@@ -195,7 +198,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 
     @Override
     public void reconcileStock() {
-        //以 Redis 库存为准修正数据库库存（Redis 是最新值，数据库是异步落库的滞后值）
+        //对账方向：以 DB 库存为权威（已落库扣减），Redis 只是预扣缓存，应等于 DB 减去"未落库的预扣单数"。
+        //不能再用 Redis 覆盖 DB，否则高峰期会把"已预扣未落库"的在途部分双重扣减。
         List<SeckillGoods> activeList = seckillGoodsMapper.selectActiveList();
         for (SeckillGoods goods : activeList) {
             String stockKey = "seckill:stock:" + goods.getId();
@@ -203,11 +207,14 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             if (redisStockStr == null) {
                 continue;
             }
-            int redisStock = Integer.parseInt(redisStockStr);
             int dbStock = goods.getStockCount();
-            if (redisStock != dbStock) {
-                seckillGoodsMapper.updateStock(goods.getId(), redisStock);
-                log.info("库存对账修正：秒杀商品ID={}, Redis库存={}, 数据库库存={}", goods.getId(), redisStock, dbStock);
+            //未落库的预扣单数（order_id=0），它们占用了 Redis 库存但还没扣 DB
+            int pending = seckillOrderMapper.countPending(goods.getId());
+            int expectedRedis = Math.max(0, dbStock - pending);
+            int redisStock = Integer.parseInt(redisStockStr);
+            if (redisStock != expectedRedis) {
+                redisTemplate.opsForValue().set(stockKey, String.valueOf(expectedRedis), Duration.ofHours(2));
+                log.info("库存对账修正：秒杀商品ID={}, Redis库存 {}->{}, DB库存={}, 未落库预扣={}", goods.getId(), redisStock, expectedRedis, dbStock, pending);
             }
         }
     }

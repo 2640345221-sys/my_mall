@@ -35,4 +35,10 @@ public interface SeckillOrderMapper {
     //更新秒杀订单状态（取消订单时标记为已取消）
     @Update("update my_mall.seckill_order set status = #{status} where id = #{id}")
     void updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    //删除未落库的秒杀订单（order_id=0），死信回补用；返回删除行数，0 表示已回补过
+    int deletePending(Long userId, Long seckillGoodsId);
+
+    //统计未落库的秒杀预扣单数（order_id=0），对账时用它推算 Redis 应有库存
+    int countPending(Long seckillGoodsId);
 }

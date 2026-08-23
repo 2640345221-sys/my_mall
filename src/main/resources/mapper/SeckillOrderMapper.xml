@@ -46,4 +46,15 @@
                  )
     </insert>
 
+    <delete id="deletePending">
+        DELETE FROM my_mall.seckill_order
+        WHERE user_id = #{userId} AND seckill_goods_id = #{seckillGoodsId}
+          AND order_id = 0
+    </delete>
+
+    <select id="countPending" resultType="int">
+        SELECT COUNT(*) FROM my_mall.seckill_order
+        WHERE seckill_goods_id = #{seckillGoodsId} AND order_id = 0
+    </select>
+
 </mapper>
