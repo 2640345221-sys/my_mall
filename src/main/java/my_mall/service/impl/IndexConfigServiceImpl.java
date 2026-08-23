@@ -3,6 +3,10 @@ package my_mall.service.impl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -19,6 +23,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import my_mall.config.CacheEvictListener;
 import my_mall.constant.MessageConstant;
+import my_mall.entity.dto.GoodsCacheValue;
 import my_mall.entity.dto.IndexConfigDTO;
 import my_mall.entity.dto.IndexPageDTO;
 import my_mall.entity.po.Goods;
@@ -48,6 +53,11 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     private Cache<String, Object> goodsCache;
     @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate stringRedisTemplate;
+    //逻辑过期窗口：物理 TTL 由 Caffeine/RedisCacheConfig 控制，逻辑过期提前触发异步刷新，防热点击穿
+    private static final long LOGICAL_TTL_MS = 30 * 60 * 1000L;
+    //正在异步刷新的缓存 key 集合，用于去重：同一 key 同一时刻只允许一个刷新任务
+    private final Set<String> refreshKeys = ConcurrentHashMap.newKeySet();
+    private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(2);
     @Override
     public PageResult getPage(IndexPageDTO indexPageDTO) {
         PageResult pageResult = new PageResult();
@@ -95,98 +105,87 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     }
 
     @Override
-    //获取新品商品（两级缓存：Caffeine → Redis → 数据库）
+    //获取新品商品（两级缓存 + 逻辑过期：过期返回旧数据 + 异步刷新，防热点击穿）
     public List<Goods> getNewGoods() {
-        String l1Key = "goods:new";
-        String l2CacheName = "newCache";
-
-        List<Goods> cached = (List<Goods>) goodsCache.getIfPresent(l1Key);
-        if (cached != null) {
-            return cached;
-        }
-
-        org.springframework.cache.Cache l2Cache = cacheManager.getCache(l2CacheName);
-        if (l2Cache != null) {
-            List<Goods> redisValue = l2Cache.get(SimpleKey.EMPTY, List.class);
-            if (redisValue != null) {
-                goodsCache.put(l1Key, redisValue);
-                return redisValue;
-            }
-        }
-
-        List<IndexConfig> list = indexConfigMapper.getByType(IndexConfigTypeEnum.NEW_GOODS.getValue());
-        List<Long> ids = list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
-        List<Goods> result = ids.isEmpty() ? new ArrayList<>() : goodsMapper.getByIdBatch(ids);
-
-        goodsCache.put(l1Key, result);
-        if (l2Cache != null) {
-            l2Cache.put(SimpleKey.EMPTY, result);
-        }
-
-        return result;
+        return getGoodsCached("goods:new", "newCache", IndexConfigTypeEnum.NEW_GOODS);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    //获取热销商品（两级缓存，同 getNewGoods）
+    //获取热销商品（两级缓存 + 逻辑过期，同 getNewGoods）
     public List<Goods> getPopularGoods() {
-        String l1Key = "goods:popular";
-        String l2CacheName = "popularCache";
+        return getGoodsCached("goods:popular", "popularCache", IndexConfigTypeEnum.POPULAR_GOODS);
+    }
 
-        List<Goods> cached = (List<Goods>) goodsCache.getIfPresent(l1Key);
+    @Override
+    //获取推荐商品（两级缓存 + 逻辑过期，同 getNewGoods）
+    public List<Goods> getRecommendGoods() {
+        return getGoodsCached("goods:recommend", "recommendCache", IndexConfigTypeEnum.RECOMMEND_GOODS);
+    }
+
+    //统一缓存读取路径：L1 Caffeine → L2 Redis → DB，命中过期数据时先返回旧数据再异步刷新
+    @SuppressWarnings("unchecked")
+    private List<Goods> getGoodsCached(String l1Key, String l2CacheName, IndexConfigTypeEnum type) {
+        GoodsCacheValue cached = (GoodsCacheValue) goodsCache.getIfPresent(l1Key);
         if (cached != null) {
-            return cached;
+            if (!cached.isExpired()) {
+                return cached.getData();
+            }
+            //逻辑过期：返回旧数据 + 异步刷新，避免热点 key 击穿
+            refreshAsync(l1Key, l2CacheName, type);
+            return cached.getData();
         }
 
         org.springframework.cache.Cache l2Cache = cacheManager.getCache(l2CacheName);
+        GoodsCacheValue redisValue = null;
         if (l2Cache != null) {
-            List<Goods> redisValue = l2Cache.get(SimpleKey.EMPTY, List.class);
-            if (redisValue != null) {
-                goodsCache.put(l1Key, redisValue);
-                return redisValue;
+            try {
+                redisValue = l2Cache.get(SimpleKey.EMPTY, GoodsCacheValue.class);
+            } catch (Exception e) {
+                //历史数据可能是旧格式（裸 List），反序列化失败视为未命中，回源 DB 后覆盖为新格式
+                log.warn("缓存反序列化失败，忽略并回源: {}", l2CacheName, e);
             }
         }
+        if (redisValue != null) {
+            goodsCache.put(l1Key, redisValue);
+            if (redisValue.isExpired()) {
+                refreshAsync(l1Key, l2CacheName, type);
+            }
+            return redisValue.getData();
+        }
 
-        List<IndexConfig> list = indexConfigMapper.getByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
+        //两级都未命中，从 DB 加载并双写缓存
+        return loadAndPut(l1Key, l2CacheName, type);
+    }
+
+    //从 DB 加载并把逻辑过期包装写入 L1/L2，两处都写，保证下次命中不读库
+    private List<Goods> loadAndPut(String l1Key, String l2CacheName, IndexConfigTypeEnum type) {
+        List<IndexConfig> list = indexConfigMapper.getByType(type.getValue());
         List<Long> ids = list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
         List<Goods> result = ids.isEmpty() ? new ArrayList<>() : goodsMapper.getByIdBatch(ids);
 
-        goodsCache.put(l1Key, result);
+        GoodsCacheValue value = new GoodsCacheValue(System.currentTimeMillis() + LOGICAL_TTL_MS, result);
+        goodsCache.put(l1Key, value);
+        org.springframework.cache.Cache l2Cache = cacheManager.getCache(l2CacheName);
         if (l2Cache != null) {
-            l2Cache.put(SimpleKey.EMPTY, result);
+            l2Cache.put(SimpleKey.EMPTY, value);
         }
         return result;
     }
 
-    @Override
-    //获取推荐商品（两级缓存，同 getNewGoods）
-    public List<Goods> getRecommendGoods() {
-        String l1Key = "goods:recommend";
-        String l2CacheName = "recommendCache";
-
-        List<Goods> cached = (List<Goods>) goodsCache.getIfPresent(l1Key);
-        if (cached != null) {
-            return cached;
+    //异步刷新缓存，refreshKeys 去重：同一 key 同时只允许一个刷新任务，防缓存雪崩的请求风暴
+    private void refreshAsync(String l1Key, String l2CacheName, IndexConfigTypeEnum type) {
+        if (!refreshKeys.add(l1Key)) {
+            return;
         }
-
-        org.springframework.cache.Cache l2Cache = cacheManager.getCache(l2CacheName);
-        if (l2Cache != null) {
-            List<Goods> redisValue = l2Cache.get(SimpleKey.EMPTY, List.class);
-            if (redisValue != null) {
-                goodsCache.put(l1Key, redisValue);
-                return redisValue;
+        asyncExecutor.submit(() -> {
+            try {
+                loadAndPut(l1Key, l2CacheName, type);
+            } catch (Exception e) {
+                log.error("逻辑过期异步刷新失败: {}", l1Key, e);
+            } finally {
+                refreshKeys.remove(l1Key);
             }
-        }
-
-        List<IndexConfig> list = indexConfigMapper.getByType(IndexConfigTypeEnum.RECOMMEND_GOODS.getValue());
-        List<Long> ids = list.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
-        List<Goods> result = ids.isEmpty() ? new ArrayList<>() : goodsMapper.getByIdBatch(ids);
-
-        goodsCache.put(l1Key, result);
-        if (l2Cache != null) {
-            l2Cache.put(SimpleKey.EMPTY, result);
-        }
-        return result;
+        });
     }
 
     @Override
@@ -204,9 +203,10 @@ public class IndexConfigServiceImpl implements IndexConfigService {
         clearRedisCache("popularCache");
         clearRedisCache("recommendCache");
 
-        putToRedis("newCache", getNewGoods());
-        putToRedis("popularCache", getPopularGoods());
-        putToRedis("recommendCache", getRecommendGoods());
+        //清空后调用 getter 预热，getter 内部会把逻辑过期包装写入两级缓存
+        getNewGoods();
+        getPopularGoods();
+        getRecommendGoods();
         //发布消息，通知其他实例清它们的本地缓存
         stringRedisTemplate.convertAndSend(CacheEvictListener.CACHE_EVICT_TOPIC, CacheEvictListener.INDEX_CONFIG_CACHE);
     }
@@ -325,13 +325,6 @@ public class IndexConfigServiceImpl implements IndexConfigService {
         org.springframework.cache.Cache cache = cacheManager.getCache(cacheName);
         if (cache != null) {
             cache.clear();
-        }
-    }
-
-    private void putToRedis(String cacheName, Object value) {
-        org.springframework.cache.Cache cache = cacheManager.getCache(cacheName);
-        if (cache != null) {
-            cache.put(SimpleKey.EMPTY, value);
         }
     }
 }
