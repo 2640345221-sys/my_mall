@@ -5,7 +5,6 @@ import com.github.pagehelper.PageHelper;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 import my_mall.constant.JudgeConstant;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.SeckillGoodsPageDTO;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.time.LocalDateTime;
 
 @Service
-@Slf4j
 public class SeckillGoodsServiceImpl implements SeckillGoodsService {
 
     @Resource
@@ -46,7 +44,6 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             String stockKey = "seckill:stock:" + goods.getId();
             int stockInt=goods.getStockCount().intValue();
             redisTemplate.opsForValue().set(stockKey, String.valueOf(stockInt), Duration.ofHours(2));
-            log.info("预热秒杀商品库存，ID: {}, 库存: {}", goods.getId(), goods.getStockCount());
         }
     }
     @Override
@@ -76,7 +73,6 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             throw new SeckillException(MessageConstant.SECKILL_STOCK_INVALID);
         }
         redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount().intValue()), Duration.ofHours(2));
-        log.info("新增秒杀商品成功，ID：{}，商品ID：{}", seckillGoods.getId(), seckillGoods.getGoodsId());
     }
 
     @Override
@@ -114,7 +110,6 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         if (seckillGoods.getStockCount() != null && !seckillGoods.getStockCount().equals(existing.getStockCount())) {
             redisTemplate.opsForValue().set("seckill:stock:" + seckillGoods.getId(), String.valueOf(seckillGoods.getStockCount().intValue()), Duration.ofHours(2));
         }
-        log.info("更新秒杀商品成功，ID：{}", seckillGoods.getId());
     }
 
     @Override
@@ -128,7 +123,6 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
         //删除时回补剩余秒杀库存（先读 Redis 剩余，再删 Redis）
         recoverStockToGoods(seckillGoods);
         redisTemplate.delete("seckill:stock:" + id);
-        log.info("删除秒杀商品成功，ID：{}", id);
     }
 
     @Override
@@ -168,7 +162,6 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             seckillGoodsMapper.updateStock(id, 0);
             redisTemplate.delete("seckill:stock:" + id);
         }
-        log.info("修改秒杀商品状态成功，ID：{}，新状态：{}", id, status);
     }
 
     @Override
@@ -180,7 +173,6 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             seckillGoodsMapper.updateStatus(goods.getId(), JudgeConstant.ENABLE);
             redisTemplate.opsForValue().set("seckill:stock:" + goods.getId(),
                     String.valueOf(goods.getStockCount().intValue()), Duration.ofHours(2));
-            log.info("秒杀活动自动开始，ID：{}", goods.getId());
         }
 
         //到结束时间且仍启用的秒杀，自动禁用并清理库存
@@ -192,7 +184,6 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             //剩余已回补商品，本次活动库存归零
             seckillGoodsMapper.updateStock(goods.getId(), 0);
             redisTemplate.delete("seckill:stock:" + goods.getId());
-            log.info("秒杀活动自动结束，ID：{}", goods.getId());
         }
     }
 
@@ -211,10 +202,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
             //未落库的预扣单数（order_id=0），它们占用了 Redis 库存但还没扣 DB
             int pending = seckillOrderMapper.countPending(goods.getId());
             int expectedRedis = Math.max(0, dbStock - pending);
-            int redisStock = Integer.parseInt(redisStockStr);
-            if (redisStock != expectedRedis) {
+            if (Integer.parseInt(redisStockStr) != expectedRedis) {
                 redisTemplate.opsForValue().set(stockKey, String.valueOf(expectedRedis), Duration.ofHours(2));
-                log.info("库存对账修正：秒杀商品ID={}, Redis库存 {}->{}, DB库存={}, 未落库预扣={}", goods.getId(), redisStock, expectedRedis, dbStock, pending);
             }
         }
     }

@@ -50,8 +50,6 @@ public class OssUtils {
                 .append("/")
                 .append(objectName);
 
-        log.info("文件上传到:{}", stringBuilder.toString());
-
         return stringBuilder.toString();
 
     }

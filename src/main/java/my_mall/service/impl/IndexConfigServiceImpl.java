@@ -190,24 +190,17 @@ public class IndexConfigServiceImpl implements IndexConfigService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    //重置首页配置：重新计算三个栏目，然后清空并预热两级缓存
+    //重置首页配置：重新计算三个栏目，然后写透两级缓存（覆写逻辑过期包装，避免清空造成的空窗击穿）
     public void resetIndexConfig() {
         resetRecommendGoods();
         resetNewGoods();
         resetPopularGoods();
 
-        goodsCache.invalidate("goods:new");
-        goodsCache.invalidate("goods:popular");
-        goodsCache.invalidate("goods:recommend");
-        clearRedisCache("newCache");
-        clearRedisCache("popularCache");
-        clearRedisCache("recommendCache");
-
-        //清空后调用 getter 预热，getter 内部会把逻辑过期包装写入两级缓存
-        getNewGoods();
-        getPopularGoods();
-        getRecommendGoods();
-        //发布消息，通知其他实例清它们的本地缓存
+        //写透：直接读 DB 并覆写两级缓存
+        loadAndPut("goods:new", "newCache", IndexConfigTypeEnum.NEW_GOODS);
+        loadAndPut("goods:popular", "popularCache", IndexConfigTypeEnum.POPULAR_GOODS);
+        loadAndPut("goods:recommend", "recommendCache", IndexConfigTypeEnum.RECOMMEND_GOODS);
+        //发布消息，通知其他实例清它们的本地缓存（它们的 L2 已是最新，清 L1 后下次请求命中新 L2）
         stringRedisTemplate.convertAndSend(CacheEvictListener.CACHE_EVICT_TOPIC, CacheEvictListener.INDEX_CONFIG_CACHE);
     }
 
@@ -215,11 +208,9 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     //重新设置最新商品（首页新品栏）
     public void resetNewGoods() {
         try {
-            log.info("开始重新设置最新商品");
             indexConfigMapper.deleteByType(IndexConfigTypeEnum.NEW_GOODS.getValue());
             List<Goods> latestGoods = goodsMapper.getLatestGoods(10);
             if (latestGoods.isEmpty()) {
-                log.info("没有找到可用的最新商品");
                 return;
             }
             List<IndexConfig> newConfigs = latestGoods.stream()
@@ -238,7 +229,6 @@ public class IndexConfigServiceImpl implements IndexConfigService {
             if(newConfigs!=null&&!newConfigs.isEmpty()){
                 indexConfigMapper.insertBatch(newConfigs);
             }
-            log.info("成功设置 {} 个最新商品", latestGoods.size());
         } catch (Exception e) {
             log.error("重新设置最新商品失败", e);
             throw new RuntimeException(MessageConstant.RESET_NEW_GOODS_ERROR + ": " + e.getMessage());
@@ -249,14 +239,12 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     //重新设置热销商品（首页热销栏）
     public void resetPopularGoods() {
         try {
-            log.info("开始重新设置热销商品");
             indexConfigMapper.deleteByType(IndexConfigTypeEnum.POPULAR_GOODS.getValue());
             List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10);
             if (hotGoodsIds.isEmpty()) {
                 hotGoodsIds = goodsMapper.getLatestGoods(10).stream().map(Goods::getId).collect(Collectors.toList());
             }
             if (hotGoodsIds.isEmpty()) {
-                log.info("没有找到热销商品");
                 return;
             }
             List<Goods> hotGoods = goodsMapper.getByIdBatch(hotGoodsIds);
@@ -276,7 +264,6 @@ public class IndexConfigServiceImpl implements IndexConfigService {
             if(configs!=null&&!configs.isEmpty()){
                 indexConfigMapper.insertBatch(configs);
             }
-            log.info("成功设置 {} 个热销商品", hotGoods.size());
         } catch (Exception e) {
             log.error("重新设置热销商品失败", e);
             throw new RuntimeException(MessageConstant.RESET_POPULAR_GOODS_ERROR + ": " + e.getMessage());
@@ -287,14 +274,12 @@ public class IndexConfigServiceImpl implements IndexConfigService {
     //重新设置推荐商品（首页推荐栏）
     public void resetRecommendGoods() {
         try {
-            log.info("开始重新设置推荐商品");
             indexConfigMapper.deleteByType(IndexConfigTypeEnum.RECOMMEND_GOODS.getValue());
             List<Long> hotGoodsIds = shoppingCartMapper.selectTopSellingGoodsIds(10);
             if (hotGoodsIds.isEmpty()) {
                 hotGoodsIds = goodsMapper.getLatestGoods(10).stream().map(Goods::getId).collect(Collectors.toList());
             }
             if (hotGoodsIds.isEmpty()) {
-                log.info("没有找到推荐商品");
                 return;
             }
             List<Goods> hotGoods = goodsMapper.getByIdBatch(hotGoodsIds);
@@ -314,17 +299,9 @@ public class IndexConfigServiceImpl implements IndexConfigService {
             if(configs!=null&&!configs.isEmpty()){
                 indexConfigMapper.insertBatch(configs);
             }
-            log.info("成功设置 {} 个推荐商品", hotGoods.size());
         } catch (Exception e) {
             log.error("重新设置推荐商品失败", e);
             throw new RuntimeException(MessageConstant.RESET_RECOMMEND_GOODS_ERROR + ": " + e.getMessage());
-        }
-    }
-
-    private void clearRedisCache(String cacheName) {
-        org.springframework.cache.Cache cache = cacheManager.getCache(cacheName);
-        if (cache != null) {
-            cache.clear();
         }
     }
 }

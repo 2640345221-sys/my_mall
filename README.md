@@ -10,7 +10,7 @@ Spring Boot 单体电商系统，用户端 + 管理端，涵盖商品管理、�
 | MyBatis + PageHelper | ORM + 分页 |
 | MySQL 8.0 | 关系型数据库 |
 | Redis + Caffeine | 两级缓存（L1 本地 / L2 远程） |
-| Redis + Lua | 秒杀库存原子扣减 |
+| Redis + Redisson | 秒杀分布式锁 + 库存预扣 |
 | RabbitMQ | 秒杀异步削峰 |
 | Hutool IdUtil | 雪花算法订单号 |
 | JWT (jjwt) | 双端身份认证 |
@@ -42,7 +42,6 @@ my_mall/
 ├── utils/              # 工具类
 └── resources/
     ├── mapper/         # MyBatis XML
-    ├── lua/            # Lua 脚本（秒杀）
     └── application*.yml
 ```
 
@@ -72,31 +71,41 @@ my_mall/
   ↓
 Controller → RabbitMQ 异步入队（削峰）
   ↓
-SeckillRequestConsumer: Lua 脚本原子扣减 Redis 库存
-  → -1: 库存不足  → Redis 失败标记  → 前端轮询返回失败
-  → -2: 重复秒杀  → 直接返回
-  → ≥0: 成功      → 写 DB + RabbitMQ 转发
+SeckillRequestConsumer（纯 Redis，毫秒级）
+  Redisson 分布式锁串行化：
+  清失败标记 → 查库存（key 缺失则 DB 兜底预热）
+  → 库存不足 → Redis 失败标记
+  → 已秒杀（userKey 存在）→ 跳过
+  → 扣减 Redis 库存 + 标记用户 → 转发 SECKILL_QUEUE
   ↓
-SeckillOrderConsumer: 创建订单
+SeckillOrderConsumer（DB 落库，异步）
+  校验地址/商品 → DB 唯一约束去重（重复则回补预扣）
+  → 秒杀单占位 + 创建正式订单 → 条件扣减 DB 库存
+  → 回写 orderId → 插入订单项 + 收货地址
+  ↓ 异常 → 回补 Redis 预扣 + 失败标记 → 重抛进死信队列
+SeckillDeadConsumer（死信兜底）→ 幂等回补
   ↓
-前端轮询 GET /result → 查 Redis 失败标记 + DB 订单
+前端轮询 GET /result → 失败标记 / DB 秒杀单
 ```
 
 关键点：
-- **Lua 脚本**一次网络往返完成"检查库存 + 去重 + 扣减"，原子执行
-- **Lazy Queue**消息直接落盘，不会 OOM
+- **防超卖**：Redisson 分布式锁 + DB 条件扣减（`stock_num >= count`）双重保证
+- **幂等**：Redis `userKey`（带 TTL）+ DB 唯一约束 `(user_id, seckill_goods_id)`，消息重放不重复下单
+- **一致性兜底**：死信队列回补预扣 + 定时对账修正（`Redis = DB - 未落库预扣`）
+- **Lazy Queue** 消息直接落盘，不会 OOM
 - **失败标记**写入 Redis（带 TTL），前端 1.5s 轮询获取明确结果
 
 ## 缓存策略
 
 | 数据 | Caffeine (L1) | Redis (L2) | 失效策略 |
 |------|:---:|:---:|------|
-| 新品商品 | 10min | 1天 | 清空 + 预热 |
-| 热销商品 | 10min | 30min | 清空 + 预热 |
-| 推荐商品 | 10min | 6h | 清空 + 预热 |
+| 新品商品 | 10min | 1天 | 重置后写透两级缓存 + 广播清其它实例 L1 |
+| 热销商品 | 10min | 30min | 重置后写透两级缓存 + 广播清其它实例 L1 |
+| 推荐商品 | 10min | 6h | 重置后写透两级缓存 + 广播清其它实例 L1 |
 | 分类树 | 30min | 30min | 增删改全清 |
 | 秒杀库存 | ❌ | 2h | 增删改同步 |
 
+> 配置变更采用**写透**（直接覆写逻辑过期包装），原子无空窗期；再通过 Redis Pub/Sub 广播清其它实例的本地缓存，各实例下次请求命中新的 L2。
 > 秒杀不走 Caffeine：多实例部署时本地缓存会导致超卖。
 
 ## 前端

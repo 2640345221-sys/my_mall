@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.StockDeductDTO;
 import my_mall.entity.po.Order;
@@ -26,7 +25,6 @@ import my_mall.mapper.OrderItemMapper;
 import my_mall.mapper.OrderMapper;
 
 @Component
-@Slf4j
 public class MyTask {
     @Resource
     private OrderMapper orderMapper;
@@ -50,7 +48,6 @@ public class MyTask {
         }
         try {
             try {
-                log.info("处理超时任务");
                 List<Order> ordersList = orderMapper.getByStatusAndTime(OrderStatusEnum.ORDER_PRE_PAY.getStatus(), LocalDateTime.now().plusMinutes(-15));
 
                 for (Order order : ordersList) {
@@ -66,7 +63,6 @@ public class MyTask {
 
                 if(!ordersList.isEmpty()) {
                     orderMapper.updateBatch(ordersList);
-                    log.info("成功关闭 {} 个超时订单", ordersList.size());
                 }
             } catch (Exception e) {
                 throw new TimeOutOrderException(MessageConstant.ORDER_TIMEOUT_HANDLE_ERROR + ": " + e.getMessage());
@@ -85,7 +81,6 @@ public class MyTask {
         }
         try {
             try {
-                log.info("自动确认完成任务");
                 List<Order> ordersList = orderMapper.getByStatusAndTime(OrderStatusEnum.ORDER_EXPRESS.getStatus(), LocalDateTime.now().plusDays(-7));
 
                 ordersList.stream().forEach(order -> {
@@ -95,7 +90,6 @@ public class MyTask {
 
                 if(!ordersList.isEmpty()) {
                     orderMapper.updateBatch(ordersList);
-                    log.info("成功完成 {} 个订单", ordersList.size());
                 }
             } catch (Exception e) {
                 throw new AutoConfirmException(MessageConstant.ORDER_AUTO_CONFIRM_ERROR + ": " + e.getMessage());
@@ -112,9 +106,7 @@ public class MyTask {
             return;
         }
         try {
-            log.info("开始执行首页配置重置任务");
             indexConfigService.resetIndexConfig();
-            log.info("首页配置重置任务完成");
         } finally {
             unlock("task:resetIndexConfig");
         }

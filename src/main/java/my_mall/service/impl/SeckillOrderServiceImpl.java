@@ -3,8 +3,6 @@ package my_mall.service.impl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
-import my_mall.constant.JudgeConstant;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.PageDTO;
 import my_mall.entity.po.SeckillOrder;
@@ -16,10 +14,7 @@ import my_mall.utils.TLUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
-
 @Service
-@Slf4j
 public class SeckillOrderServiceImpl implements SeckillOrderService {
 
     @Resource
@@ -58,7 +53,6 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
         }
         SeckillOrder order = seckillOrderMapper.getByUserIdAndSeckillGoodsId(userId, seckillGoodsId);
         if (order == null) {
-            log.info("用户 {} 未参与秒杀商品 {} 或未产生订单", userId, seckillGoodsId);
             return null;
         }
         return order;

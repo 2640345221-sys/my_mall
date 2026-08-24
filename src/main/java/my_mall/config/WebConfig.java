@@ -2,7 +2,6 @@ package my_mall.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
 import my_mall.interceptor.JwtTokenAdminInterceptor;
 import my_mall.interceptor.JwtTokenUserInterceptor;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +14,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.List;
 
 @Configuration
-@Slf4j
 public class WebConfig implements WebMvcConfigurer {
     @Resource
     private JwtTokenAdminInterceptor jwtTokenAdminInterceptor;
@@ -26,7 +24,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        log.info("开始注册拦截器");
         //管理员只放行登录
         registry.addInterceptor(jwtTokenAdminInterceptor)
                 .addPathPatterns("/api/admin/**")
@@ -49,7 +46,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        log.info("拓展消息转换器");
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(objectMapper);
         converters.add(1, converter);

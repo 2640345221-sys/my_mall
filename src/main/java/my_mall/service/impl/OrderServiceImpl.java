@@ -19,7 +19,6 @@ import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
 import my_mall.utils.IdGenerator;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import my_mall.constant.MessageConstant;
 import my_mall.entity.dto.OrderCartDTO;
 import my_mall.entity.dto.OrderDTO;
@@ -57,7 +56,6 @@ import my_mall.service.OrderService;
 import my_mall.utils.TLUtils;
 
 @Service
-@Slf4j
 public class OrderServiceImpl implements OrderService {
     @Resource
     private OrderMapper orderMapper;
@@ -173,8 +171,6 @@ public class OrderServiceImpl implements OrderService {
                 //参考普通订单取消状态：取消订单关闭(-3)
                 seckillOrderMapper.updateStatus(seckillOrder.getId(), OrderStatusEnum.ORDER_CLOSE_CANCEL.getStatus());
                 redisTemplate.delete("seckill:user:" + seckillOrder.getSeckillGoodsId() + ":" + order.getUserId());
-                log.info("取消秒杀订单，恢复秒杀库存并标记取消: orderId={}, seckillGoodsId={}, count={}",
-                        order.getId(), seckillOrder.getSeckillGoodsId(), count);
             }
         } else {
             //普通订单取消：回补商品库存

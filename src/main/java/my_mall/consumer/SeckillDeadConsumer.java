@@ -33,7 +33,6 @@ public class SeckillDeadConsumer {
         //幂等闸：删除未落库的秒杀订单（order_id=0）。删到0行说明已回补过，跳过，防止死信重发重复回补
         int rows = seckillOrderMapper.deletePending(userId, seckillGoodsId);
         if (rows == 0) {
-            log.info("秒杀死信已回补过，跳过: userId={}, seckillGoodsId={}", userId, seckillGoodsId);
             return;
         }
         //回补Redis库存，清掉去重标记让用户能重试，打失败标记让前端轮询返回失败
